@@ -24,11 +24,16 @@ button:disabled{opacity:.4;cursor:default}
 #ov img{max-width:100%;max-height:calc(100% - 50px);object-fit:contain;border-radius:10px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 #ov button{background:var(--card)}
 #ovcap{color:#fff;font-size:14px;text-align:center;padding:0 12px}
+#joy{position:fixed;left:calc(22px + env(safe-area-inset-left,0px));bottom:calc(26px + env(safe-area-inset-bottom,0px));width:120px;height:120px;border-radius:50%;background:var(--card);border:1px solid var(--bd);display:none;touch-action:none;z-index:5}
+#joy i{position:absolute;left:40px;top:40px;width:40px;height:40px;border-radius:50%;background:var(--ac);opacity:.85}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 <button class="pic" id="pic">🖼 Xem ảnh</button>
+<button class="pic" id="wb" style="top:calc(52px + env(safe-area-inset-top,0px))">🚶 Đi bộ</button>
+<div id="joy"><i></i></div>
+<div class="hint" id="wkh" style="position:fixed;bottom:12px;right:12px;display:none;background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:4px 8px">WASD / ↑↓←→ di chuyển · Shift chạy · kéo chuột xoay · E xem ảnh phòng</div>
 <div id="ov"><img id="ovimg" alt="Ảnh minh họa"><div id="ovcap"></div><button id="ovx">Đóng</button></div>
 <div class="title">Nhà phố 3 tầng · 5 × 18 m</div>
 <div class="panel">
@@ -110,11 +115,11 @@ const furn=[ // per floor: [w,h,d,x,z,mat,yBase?]
   [.4,.8,.2,.8,-3.35,white],[.4,.4,.5,.8,-3.65,white],[1.1,.04,1.1,1.8,-3.85,stone],[.04,2,.04,2.3,-3.35,iron],
   // bồn rửa tay ngoài WC2: cạnh vách WC, lưng sát tường giáp phòng ngủ 2, mặt quay ra hành lang
   [.45,.85,.45,-.6,-3.485,white],[.43,.04,.43,-.6,-3.485,stone,.85],[.5,.7,.04,-.6,-3.28,steel,1.15],[.05,.18,.05,-.6,-3.35,iron,.89],
-  [3,2.1,.6,.9,-5.26,wood],[1.6,.45,2.1,.94,-7.75,bedM],[1.6,.9,.08,.94,-8.84,wood],[.55,.12,.35,.55,-8.55,white,.45],[.55,.12,.35,1.33,-8.55,white,.45],[.35,.45,1.8,2.2,-7.3,wood],[.4,.5,.4,2.1,-8.65,wood],[.4,.5,.4,2.15,-5.95,wood]],
+  [3,2.1,.6,.9,-5.26,wood],[2.1,.45,1.6,1.27,-7.3,bedM],[.08,.9,1.8,2.36,-7.3,wood],[.35,.12,.55,2.1,-7.7,white,.45],[.35,.12,.55,2.1,-6.9,white,.45],[.4,.5,.4,2.15,-8.4,wood],[.4,.5,.4,2.15,-6.2,wood]],
  [[.4,.45,.65,2.1,-3.8,white],[.9,.05,.9,1.2,-4.4,stone],[.6,.85,.4,-.4,-3.5,white]]];
-const names=[["Sảnh","Phòng khách","Cầu thang","Phòng ngủ 1","WC1","Bếp + ăn"],["Phòng thờ","Phòng dự trữ","Cầu thang","Phòng ngủ 2","WC2","Phòng ngủ 3"],["Phòng trống","Phòng trống","Cầu thang","Phòng trống","WC","Phòng trống"]];
+const names=[["Sảnh","Phòng khách","Cầu thang","Phòng ngủ 1","WC1","Bếp + ăn"],["Phòng thờ","Phòng dự trữ","Cầu thang","Phòng ngủ 2","WC2","Phòng ngủ 3"],["Phòng trống","Phòng trống","Cầu thang","Phòng trống","WC","Phòng trống","Thang xoắn"]];
 const lz=[7.25,4,1.45,-1.4,-4.05,-7];
-const LZ=[[7.75,4.55,1.45,-1.4,-4.05,-7],lz,lz];
+const LZ=[[7.75,4.55,1.45,-1.4,-4.05,-7],lz,[...lz,-9.9]];
 function part(g,z,g0,g1){box(g,g0+2.5,H-.2,.12,(g0-2.5)/2,.2,z,wallM);box(g,2.5-g1,H-.2,.12,(g1+2.5)/2,.2,z,wallM)}
 const warm=M(0xcdb48a,{emissive:0x2a1f0e}),CX=.7;
 function mirror(g,n0){g.children.slice(n0).forEach(c=>{const m=c.clone();m.position.z=18-c.position.z;m.scale.z*=-1;g.add(m)})}
@@ -237,7 +242,7 @@ for(let f=0;f<3;f++){
  if(f>0){bw(g,.99,2.2,-.6,0,-8.86,1,1);bw(g,1.38,1.4,.88,.9,-8.86,1)}
  // furniture
  furn[f].forEach(a=>box(g,a[0],a[1],a[2],a[3],a[6]||0,a[4],a[5]));
- g.userData.labels=names[f].map((n,i)=>label(g,n,0,2.6,LZ[f][i]));
+ g.userData.labels=names[f].map((n,i)=>label(g,n,f==2&&i==6?1.95:0,2.6,LZ[f][i]));
  // stairs
  if(f<2){const n=20,rh=H/n;for(let i=0;i<n;i++){const a=i<10,j=a?i:i-10;box(g,.28,.12,.9,a?-.45+j*.28:2.07-j*.28,rh*(i+1)-.12,a?1.9:.95,stone)}box(g,.4,.12,1.9,2.25,10*rh-.12,1.425,stone)}
  facade2(g,f);
@@ -293,27 +298,36 @@ const PICS=[ // [Tất cả, Tầng 1, Tầng 2, Tầng 3]; rooms theo thứ t�
   {main:'images/tat-ca.jpg'},
   {main:'images/tang-1/tong-quan.jpg',rooms:['images/tang-1/sanh.jpg','images/tang-1/phong-khach.jpg','images/tang-1/cau-thang.jpg','images/tang-1/phong-ngu-1.jpg','images/tang-1/wc1.jpg','images/tang-1/bep-an.jpg']},
   {main:'images/tang-2/tong-quan.jpg',rooms:['images/tang-2/phong-tho.jpg','images/tang-2/phong-du-tru.jpg','images/tang-2/cau-thang.jpg','images/tang-2/phong-ngu-2.jpg','images/tang-2/wc2.jpg','images/tang-2/phong-ngu-3.jpg']},
-  {main:'images/tang-3/tong-quan.jpg',rooms:['images/tang-3/phong-trong-1.jpg','images/tang-3/phong-trong-2.jpg','images/tang-3/cau-thang.jpg','images/tang-3/phong-trong-3.jpg','images/tang-3/wc.jpg','images/tang-3/phong-trong-4.jpg']},
+  {main:'images/tang-3/tong-quan.jpg',rooms:['images/tang-3/phong-trong-1.jpg','images/tang-3/phong-trong-2.jpg','images/tang-3/cau-thang.jpg','images/tang-3/phong-trong-3.jpg','images/tang-3/wc.jpg','images/tang-3/phong-trong-4.jpg','images/tang-3/thang-xoan.jpg']},
 ];
 const pic=document.getElementById('pic'),ov=document.getElementById('ov'),ovimg=document.getElementById('ovimg');
 let curLv=0,curRm=-1;
 const ovcap=document.getElementById('ovcap');
-function curPath(){const p=PICS[curLv];return curRm>=0&&p.rooms?p.rooms[curRm]:p.main}
-ovimg.onload=()=>{ovimg.style.display='block';ovcap.textContent=''};
+// khi đi bộ: ảnh theo phòng nhân vật đang đứng; ở hành lang / ban công → tổng quan tầng; ngoài nhà / sân thượng → tổng quan chung
+function where(){const x=wk.x,z=wk.z,L=Math.max(wk.lvl,0);
+ if(L>2||(L==0&&(Math.abs(x)>2.6||Math.abs(z)>9.2)))return{f:0,rm:-1};
+ let r=-1;
+ if(L==0)r=z>6.7?0:z>2.5?1:z>.4?(x>-.95?2:-1):z>-3.2?(x>-1.2?3:-1):z>-4.9?(x>-.75?4:-1):5;
+ else if(L==1)r=Math.abs(z)>9.1?-1:z>5.5?0:z>2.5?(x>-1.1?1:-1):z>.4?(x>-1.1?2:-1):z>-3.2?(x>-1.2?3:-1):z>-4.9?(x>-.3?4:-1):5;
+ else r=Math.hypot(x-1.95,z+9.9)<1.3?6:Math.abs(z)>9.1?-1:z>5.5?0:z>2.5?1:z>.4?(x>-.75?2:-1):z>-3.2?3:z>-4.9?(x>-1.1?4:-1):5;
+ return{f:L+1,rm:r}}
+function curPath(){const w=wk.on?where():{f:curLv,rm:curRm},p=PICS[w.f];return w.rm>=0&&p.rooms?p.rooms[w.rm]:p.main}
+function curCap(){if(!wk.on)return'';const w=where();return w.f?(w.rm>=0?names[w.f-1][w.rm]+' · Tầng '+w.f:'Tổng quan tầng '+w.f):'Tổng quan'}
+ovimg.onload=()=>{ovimg.style.display='block';ovcap.textContent=curCap()};
 ovimg.onerror=()=>{ovimg.style.display='none';ovcap.textContent='Chưa có ảnh. Hãy thêm file: '+curPath()};
 pic.onclick=()=>{const p=curPath();ovimg.style.display='none';ovcap.textContent='';ovimg.src=p;ov.classList.add('show')};
-ov.onclick=()=>ov.classList.remove('show');
+document.getElementById('ovx').onclick=()=>ov.classList.remove('show'); // chỉ đóng khi bấm nút Đóng
 function mark(p,e){[...p.children].forEach(x=>x.classList.toggle('on',x===e))}
 function setLevel(n){curLv=n;curRm=-1;ov.classList.remove("show");floors.forEach((g,i)=>{g.visible=n==0||i<n;g.userData.labels.forEach(s=>s.visible=document.getElementById('lb').checked&&n>0&&i==n-1)});roof.visible=gf.visible=document.getElementById('rf').checked&&n==0;
  [...lv.children].forEach((b,i)=>b.classList.toggle('on',i==n));
  const rm=document.getElementById('rm');rm.innerHTML='';document.getElementById('rmrow').style.display=n?'flex':'none';
- if(n){const y=.6+(n-1)*H+1;const mk=(t,a,b,c,z,k=-1)=>{const e=document.createElement('button');e.textContent=t;e.onclick=()=>{curRm=k;go(0,a,b,new THREE.Vector3(0,y,z));mark(rm,e);mark(document.getElementById('vw'),null)};rm.appendChild(e)};mk('Cả tầng',.05,32,0,1.5);names[n-1].forEach((t,i)=>mk(t,.05,10,0,LZ[n-1][i]+.8,i))}}
+ if(n){const y=.6+(n-1)*H+1;const mk=(t,a,b,c,z,k=-1)=>{const e=document.createElement('button');e.textContent=t;e.onclick=()=>{curRm=k;go(0,a,b,new THREE.Vector3(n==3&&k==6?1.95:0,y,z));mark(rm,e);mark(document.getElementById('vw'),null)};rm.appendChild(e)};mk('Cả tầng',.05,32,0,1.5);names[n-1].forEach((t,i)=>mk(t,.05,10,0,LZ[n-1][i]+.8,i))}}
 const lv=document.getElementById('lv');
 ['Tất cả','Tầng 1','Tầng 2','Tầng 3'].forEach((t,i)=>{const b=document.createElement('button');b.textContent=t;b.onclick=()=>setLevel(i);lv.appendChild(b)});
 document.getElementById('rf').onchange=()=>{const cur=[...lv.children].findIndex(b=>b.classList.contains('on'));setLevel(cur)};
 document.getElementById('lb').onchange=()=>{const cur=[...lv.children].findIndex(b=>b.classList.contains('on'));setLevel(cur)};
 document.getElementById('op').oninput=e=>{const v=e.target.value/100;wallM.opacity=Math.max(v,.05);wallM.depthWrite=v>.5;wallM.needsUpdate=true};
-let th=0.5,ph=1.2,dist=44,tgt=new THREE.Vector3(0,5,0),goal=null;
+let th=0.5,ph=1.2,dist=44,tgt=new THREE.Vector3(0,5,0),goal=null,minD=8;
 function go(a,b,c,t){goal={th:a,ph:b,dist:c,t:t||new THREE.Vector3(0,5,0)}}
 const vw=document.getElementById('vw');
 [['Mặt tiền',0,1.45,40],['Phối cảnh',.6,1.2,44],['Bên hông',1.57,1.45,50],['Trên xuống',0,.05,40]].forEach(([t,a,b,c])=>{const bt=document.createElement('button');bt.textContent=t;bt.onclick=()=>{go(a,b,c);mark(vw,bt);mark(document.getElementById('rm'),null)};vw.appendChild(bt)});
@@ -324,11 +338,129 @@ cv.addEventListener('pointerup',e=>pts.delete(e.pointerId));
 cv.addEventListener('pointermove',e=>{if(!pts.has(e.pointerId))return;const o=pts.get(e.pointerId);
  if(pts.size==1){th-=(e.clientX-o[0])*.008;ph=Math.min(Math.max(ph-(e.clientY-o[1])*.008,.05),1.55)}
  pts.set(e.pointerId,[e.clientX,e.clientY]);
- if(pts.size==2){const [a,b]=[...pts.values()];const d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pd)dist=Math.min(Math.max(dist*pd/d,8),90);pd=d}});
-cv.addEventListener('wheel',e=>{e.preventDefault();goal=null;dist=Math.min(Math.max(dist*(1+e.deltaY*.001),8),90)},{passive:false});
+ if(pts.size==2){const [a,b]=[...pts.values()];const d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(pd)dist=Math.min(Math.max(dist*pd/d,minD),90);pd=d}});
+cv.addEventListener('wheel',e=>{e.preventDefault();goal=null;dist=Math.min(Math.max(dist*(1+e.deltaY*.001),minD),90)},{passive:false});
 function rs(){const w=innerWidth,h=innerHeight;R.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix()}
 addEventListener('resize',rs);rs();
-(function loop(){requestAnimationFrame(loop);
+
+// ===== CHẾ ĐỘ ĐI BỘ =====
+const wk={on:false,x:0,z:13,fy:0,yaw:Math.PI,t:0,amp:0,lvl:-1},keys={},joy={x:0,y:0},RH=H/20;
+let lastT=performance.now();
+// nhân vật
+const chr=new THREE.Group(),skin=M(0xe0b090),shirt=M(0x3a6ea5),pants=M(0x2b2f3a);
+const lim=(w,h,d,x,y,z,m)=>{const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y,z);b.castShadow=true;return b};
+const limb=(w,h,d,x,y,m)=>{const p=new THREE.Group();p.position.set(x,y,0);p.add(lim(w,h,d,0,-h/2,0,m));chr.add(p);return p};
+const legL=limb(.16,.8,.2,-.11,.85,pants),legR=limb(.16,.8,.2,.11,.85,pants),armL=limb(.12,.65,.14,-.28,1.45,shirt),armR=limb(.12,.65,.14,.28,1.45,shirt);
+chr.add(lim(.42,.6,.24,0,1.15,0,shirt),lim(.34,.4,.14,0,1.15,-.19,gold)); // thân + ba lô (mặt sau)
+const hd=new THREE.Mesh(new THREE.SphereGeometry(.14,16,12),skin);hd.position.y=1.65;hd.castShadow=true;chr.add(hd);
+chr.visible=false;S.add(chr);
+
+// va chạm tường (AABB), cửa chính/cửa sau/cửa ban công được chừa lỗ
+const colls=[];
+function wallGap(f,z,gaps){const y0=.6+f*H,r=[];let a=-2.6;
+ gaps.concat([[2.6,2.6]]).forEach(([g0,g1])=>{if(g0>a)r.push(new THREE.Box3(new THREE.Vector3(a,y0,z-.1),new THREE.Vector3(g0,y0+H-.2,z+.1)));a=g1});return r}
+(function(){S.updateMatrixWorld(true);const skip=new Set(outer.filter((_,i)=>i%4>=2));
+ floors.forEach(g=>g.traverse(o=>{if(o.isMesh&&o.material===wallM&&!skip.has(o))colls.push(new THREE.Box3().setFromObject(o))}));
+ const FG=[[[-1.4,1.4]],[[-.23,1.43]],[[-.04,1.36]]],BG=[[[1.1,2.1]],[[-1.1,-.1]],[[-1.1,-.1]]];
+ for(let f=0;f<3;f++)colls.push(...wallGap(f,9,FG[f]),...wallGap(f,-9,BG[f]))})();
+colls.push(new THREE.Box3(new THREE.Vector3(-1.05,.6+3*H,-9),new THREE.Vector3(.45,.6+3*H+1.4,-7.5)),new THREE.Box3(new THREE.Vector3(.45,.6+3*H,-8.75),new THREE.Vector3(1.55,.6+3*H+1.2,-7.25)));
+function hit(x,z,fy){const r=.25,y0=fy+.35,y1=fy+1.7;
+ for(const b of colls){if(b.max.y<y0||b.min.y>y1)continue;
+  if(x+r>b.min.x&&x-r<b.max.x&&z+r>b.min.z&&z-r<b.max.z)return true}return false}
+
+// độ cao mặt đứng: sàn từng tầng + bậc thang (2 vế, chiếu nghỉ ở x≈2.3)
+function stairTop(x,z){
+ if(z>.475&&z<2.375&&x>2.21&&x<2.45)return 10*RH;
+ if(x<-.59||x>2.21)return -1;
+ if(z>=1.425&&z<2.35)return RH*(Math.min(9,Math.max(0,Math.round((x+.45)/.28)))+1);
+ if(z>.5&&z<1.425)return RH*(Math.min(9,Math.max(0,Math.round((2.07-x)/.28)))+11);
+ return -1}
+function groundY(x,z,fy){let b=-9;const c=y=>{if(y<=fy+.6&&y>b)b=y};
+ c(Math.max(0,.6-Math.max(Math.abs(x)-2.7,z>0?z-10.4:-z-9.2,0)*.5));
+ const well=x>-.6&&x<2.45&&z>.4&&z<2.5,st=stairTop(x,z);
+ for(let L=0;L<3;L++){if(L&&!well)c(.6+L*H);if(L<2&&st>=0)c(.6+L*H+st)}
+ // sân thượng (trừ lỗ thang xoắn) + 18 bậc thang xoắn tầng 3 → mái, tâm (1.95,-9.9)
+ if(z<-7.3&&z>-10.2&&Math.abs(x)<2.5&&!(x>1.4&&x<2.35&&z<-9.2))c(.6+3*H);
+ const sx=x-1.95,sz=z+9.9;
+ if(sx*sx+sz*sz<.5625)for(let k=0;k<18;k++){const a=k*.5,ca=Math.cos(a),sa=Math.sin(a),u=sx*ca+sz*sa,v=-sx*sa+sz*ca;if(u>.15&&u<.7&&Math.abs(v)<.2)c(.6+2*H+.2+k*.2+.025)}
+ return b}
+
+function walkMove(dt){
+ const kd=(...c)=>c.some(k=>keys[k]);
+ let ix=(kd('KeyD','ArrowRight')?1:0)-(kd('KeyA','ArrowLeft')?1:0)+joy.x,
+     iz=(kd('KeyS','ArrowDown')?1:0)-(kd('KeyW','ArrowUp')?1:0)+joy.y;
+ const l=Math.hypot(ix,iz);if(l>1){ix/=l;iz/=l}
+ const run=kd('ShiftLeft','ShiftRight')||Math.hypot(joy.x,joy.y)>.92,stz=stairTop(wk.x,wk.z)>=0||(wk.fy>3&&Math.hypot(wk.x-1.95,wk.z+9.9)<.8),sp=l<.1?0:(stz?1.6:run?4.2:2.2)*Math.min(1,l);
+ const s=Math.sin(th),c=Math.cos(th),dx=c*ix+s*iz,dz=-s*ix+c*iz,L=Math.hypot(dx,dz)||1;
+ const mx=dx/L*sp*dt,mz=dz/L*sp*dt;
+ if(!hit(wk.x+mx,wk.z,wk.fy))wk.x+=mx;
+ if(!hit(wk.x,wk.z+mz,wk.fy))wk.z+=mz;
+ wk.x=Math.max(-40,Math.min(40,wk.x));wk.z=Math.max(-40,Math.min(40,wk.z));
+ if(wk.fy>3){wk.x=Math.max(-2.45,Math.min(2.45,wk.x));wk.z=Math.max(-10.15,Math.min(10.1,wk.z))} // tầng trên: không rơi khỏi ban công
+ if(wk.fy>.6+2*H+3){wk.x=Math.max(-2.2,Math.min(2.2,wk.x));wk.z=Math.max(-9.95,Math.min(-7.55,wk.z))} // sân thượng
+ const ty=groundY(wk.x,wk.z,wk.fy);wk.fy+=(ty-wk.fy)*Math.min(1,dt*(ty>wk.fy?18:9));
+ if(sp>0){let d=Math.atan2(mx,mz)-wk.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));wk.yaw+=d*Math.min(1,dt*12);wk.t+=dt*sp*2.6}
+ // chạm vào thang xoắn → tự đưa lên/xuống sân thượng
+ if(wk.cd>0)wk.cd-=dt;else{const d=Math.hypot(wk.x-1.95,wk.z+9.9);
+  if(d<.85&&Math.abs(wk.fy-(.6+2*H))<.7)wk.ride={dir:1,t:0,fx:wk.x,fz:wk.z,fy:wk.fy};
+  else if(d<.8&&Math.abs(wk.fy-(.6+3*H))<.6)wk.ride={dir:-1,t:0,fx:wk.x,fz:wk.z,fy:wk.fy};
+  // chạm đầu cầu thang giữa các tầng → tự lên (vế gần mặt tiền) / tự xuống (vế phía sau)
+  else{const Lf=Math.round((wk.fy-.6)/H);
+   if(Math.abs(wk.fy-(.6+Lf*H))<.5&&wk.x>-.5&&wk.x<.3&&wk.z>.55&&wk.z<2.3){
+    if(Lf<2&&wk.z>=1.425)startStair(Lf,1);else if(Lf>0&&Lf<3&&(wk.z<1.425||Lf==2))startStair(Lf-1,-1)}}}
+ return sp}
+// thang xoắn tự động: bước vào → quay quanh trụ lên mái (hoặc xuống), rồi đặt nhân vật xuống sàn
+function sp3(u){const a=8.5*u,r=.42;return[1.95+r*Math.cos(a),-9.9+r*Math.sin(a),.6+2*H+.225+a*.4]}
+// cầu thang giữa các tầng: đi dọc 2 vế + chiếu nghỉ, L = tầng dưới, dir 1 lên / -1 xuống
+function stairPts(L,dir){const B=.6+L*H,q=(x,z,h)=>[x,z,B+h],
+ A=[q(-.45,1.9,RH),q(2.07,1.9,10*RH),q(2.25,1.9,10*RH),q(2.25,.95,10*RH),q(2.07,.95,11*RH),q(-.45,.95,H)];
+ return dir>0?[...A,q(-.95,.95,H)]:[...A.reverse(),q(-1,1.9,0)]}
+function startStair(L,dir){wk.ride={pts:[[wk.x,wk.z,wk.fy],...stairPts(L,dir)],d:0}}
+function polyStep(dt){const R=wk.ride,p=R.pts;R.d+=dt*2.6;let d=R.d,pos=null;
+ for(let i=0;i<p.length-1&&!pos;i++){const a=p[i],b=p[i+1],l=Math.hypot(b[0]-a[0],b[1]-a[1])||1e-6;
+  if(d<=l){const k=d/l;pos=[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k]}else d-=l}
+ if(!pos){pos=p[p.length-1];wk.ride=null;wk.cd=1.5}
+ const ox=wk.x,oz=wk.z;wk.x=pos[0];wk.z=pos[1];wk.fy=pos[2];
+ const mx=wk.x-ox,mz=wk.z-oz;if(mx*mx+mz*mz>1e-8){let d2=Math.atan2(mx,mz)-wk.yaw;d2=Math.atan2(Math.sin(d2),Math.cos(d2));wk.yaw+=d2*Math.min(1,dt*12)}
+ wk.t+=dt*2.2*2.6;return 2.2}
+function rideStep(dt){if(wk.ride.pts)return polyStep(dt);const R=wk.ride,Fb=.6+2*H,T0=.4,T1=3.8,T2=.4,e=u=>u*u*(3-2*u),lp=(a,b,k)=>[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k];
+ R.t+=dt;const up=R.dir>0,LD=[1,-9.6,up?.6+3*H:Fb],S=[R.fx,R.fz,R.fy],E0=sp3(up?0:1),E1=sp3(up?1:0);let p;
+ if(R.t<T0)p=lp(S,E0,e(R.t/T0));
+ else if(R.t<T0+T1){const u=(R.t-T0)/T1;p=sp3(up?u:1-u)}
+ else if(R.t<T0+T1+T2)p=lp(E1,LD,e((R.t-T0-T1)/T2));
+ else{p=LD;wk.ride=null;wk.cd=1.5}
+ const ox=wk.x,oz=wk.z;wk.x=p[0];wk.z=p[1];wk.fy=p[2];
+ const mx=wk.x-ox,mz=wk.z-oz;if(mx*mx+mz*mz>1e-8){let d=Math.atan2(mx,mz)-wk.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));wk.yaw+=d*Math.min(1,dt*12)}
+ wk.t+=dt*2.2*2.6;return 2.2}
+function walkUpdate(dt){
+ const sp=wk.ride?rideStep(dt):walkMove(dt);
+ wk.amp+=((sp>0?1:0)-wk.amp)*Math.min(1,dt*10);
+ const sw=Math.sin(wk.t)*.7*wk.amp;legL.rotation.x=sw;legR.rotation.x=-sw;armL.rotation.x=-sw;armR.rotation.x=sw;
+ chr.position.set(wk.x,wk.fy,wk.z);chr.rotation.y=wk.yaw;
+ const lv=Math.min(3,Math.max(0,Math.floor((wk.fy-.6)/H+.2)));
+ if(lv!==wk.lvl){wk.lvl=lv;floors.forEach((g,i)=>g.visible=i<=lv);roof.visible=gf.visible=lv>=3} // ẩn các tầng phía trên nhân vật
+ const k=Math.min(1,dt*10);tgt.x+=(wk.x-tgt.x)*k;tgt.y+=(wk.fy+1.2-tgt.y)*k;tgt.z+=(wk.z-tgt.z)*k}
+
+// điều khiển + nút bật/tắt
+const wb=document.getElementById('wb'),wkh=document.getElementById('wkh'),jy=document.getElementById('joy'),kn=jy.firstElementChild;
+function setWalk(on){
+ wk.on=on;document.querySelector('.panel').style.display=on?'none':'';
+ jy.style.display=on&&(matchMedia('(pointer:coarse)').matches||matchMedia('(hover:none)').matches||navigator.maxTouchPoints>0||'ontouchstart' in window)?'block':'none';wkh.style.display=on?'block':'none';wb.blur();window.focus();wb.textContent=on?'✖ Thoát':'🚶 Đi bộ';chr.visible=on;setLevel(0);
+ if(on){Object.assign(wk,{x:0,z:13,fy:0,yaw:Math.PI,amp:0,t:0,lvl:-1,ride:null,cd:0});th=0;ph=1.25;dist=5;minD=2.5;tgt.set(0,1.2,13);roof.visible=gf.visible=false}
+ else{minD=8;th=.6;ph=1.2;dist=44;tgt.set(0,5,0);for(const k in keys)keys[k]=false;joy.x=joy.y=0}}
+wb.onclick=()=>setWalk(!wk.on);
+addEventListener('touchstart',()=>{if(wk.on)jy.style.display='block'},{passive:true}); // chắc chắn hiện joystick khi chạm màn hình
+const kc=e=>e.code||({w:'KeyW',a:'KeyA',s:'KeyS',d:'KeyD'})[(e.key||'').toLowerCase()];
+addEventListener('keydown',e=>{const c=kc(e);if(!c)return;keys[c]=true;if(wk.on&&c=='KeyE'&&!e.repeat)(ov.classList.contains('show')?ov.classList.remove('show'):pic.click());if(wk.on&&(c.startsWith('Arrow')||c=='Space'))e.preventDefault()});
+addEventListener('keyup',e=>{const c=kc(e);if(c)keys[c]=false});
+cv.addEventListener('pointerdown',()=>window.focus());addEventListener('blur',()=>{for(const k in keys)keys[k]=false});
+let jid=null;
+function jm(e){const r=jy.getBoundingClientRect();let dx=(e.clientX-r.left-60)/50,dy=(e.clientY-r.top-60)/50;const l=Math.hypot(dx,dy);if(l>1){dx/=l;dy/=l}joy.x=dx;joy.y=dy;kn.style.transform=`translate(${dx*40}px,${dy*40}px)`}
+jy.onpointerdown=e=>{jid=e.pointerId;jy.setPointerCapture(jid);jm(e)};
+jy.onpointermove=e=>{if(e.pointerId===jid)jm(e)};
+jy.onpointerup=jy.onpointercancel=()=>{jid=null;joy.x=joy.y=0;kn.style.transform=''};
+
+(function loop(){requestAnimationFrame(loop);const now=performance.now(),dt=Math.min(.05,(now-lastT)/1000);lastT=now;if(wk.on){goal=null;walkUpdate(dt)}
  if(goal){th-=Math.round((th-goal.th)/(2*Math.PI))*2*Math.PI;th+=(goal.th-th)*.12;ph+=(goal.ph-ph)*.12;dist+=(goal.dist-dist)*.12;tgt.lerp(goal.t,.12);if(Math.abs(goal.th-th)+Math.abs(goal.ph-ph)+Math.abs(goal.dist-dist)<.01&&tgt.distanceTo(goal.t)<.01)goal=null}
  cam.position.set(tgt.x+dist*Math.sin(ph)*Math.sin(th),tgt.y+dist*Math.cos(ph),tgt.z+dist*Math.sin(ph)*Math.cos(th));cam.lookAt(tgt);R.render(S,cam)})();
 </script>
