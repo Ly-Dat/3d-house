@@ -390,7 +390,7 @@ function walkMove(dt){
  let ix=(kd('KeyD','ArrowRight')?1:0)-(kd('KeyA','ArrowLeft')?1:0)+joy.x,
      iz=(kd('KeyS','ArrowDown')?1:0)-(kd('KeyW','ArrowUp')?1:0)+joy.y;
  const l=Math.hypot(ix,iz);if(l>1){ix/=l;iz/=l}
- const run=kd('ShiftLeft','ShiftRight')||Math.hypot(joy.x,joy.y)>.92,stz=stairTop(wk.x,wk.z)>=0||(wk.fy>3&&Math.hypot(wk.x-1.95,wk.z+9.9)<.8),sp=l<.1?0:(stz?1.6:run?4.2:2.2)*Math.min(1,l);
+ const run=kd('ShiftLeft','ShiftRight'),tm=1,stz=stairTop(wk.x,wk.z)>=0||(wk.fy>3&&Math.hypot(wk.x-1.95,wk.z+9.9)<.8),sp=l<.1?0:(stz?1.6:run?4.2:2.2)*tm*Math.min(1,l);
  const s=Math.sin(th),c=Math.cos(th),dx=c*ix+s*iz,dz=-s*ix+c*iz,L=Math.hypot(dx,dz)||1;
  const mx=dx/L*sp*dt,mz=dz/L*sp*dt;
  if(!hit(wk.x+mx,wk.z,wk.fy))wk.x+=mx;
