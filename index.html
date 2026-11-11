@@ -66,6 +66,9 @@ const wallM=M(0xf2e9d8,{transparent:true}),floorM=M(0xe6d5b8),glass=M(0x2b3440,{
  frame=M(0x15130f,{roughness:.4,metalness:.3}),curt=M(0xeadfc8,{roughness:.9}),lamp=M(0xffe2a0,{emissive:0xffb84d}),
  iron=M(0x1a1a1a),gold=M(0xc9a24a),red=tileM,wood=M(0x8a6040),sofaM=M(0xd9c5a8),bedM=M(0xf0ebe3),
  white=M(0xf8f4ea),stone=M(0xe9e2d3);
+const steel=M(0xb8bec4,{metalness:.5,roughness:.4}),redB=M(0x9b2a2a),cab=M(0xd9cdb6);
+// xe máy: [w,h,d,x,z,mat,yBase]
+const bk=(x,z)=>[[.12,.6,.6,x,z-.65,iron],[.14,.6,.6,x,z+.65,iron],[.28,.35,1,x,z+.05,redB,.3],[.3,.12,.55,x,z+.3,iron,.65],[.65,.06,.06,x,z-.5,iron,.95],[.06,.5,.06,x,z-.55,iron,.45]];
 function box(p,w,h,d,x,y,z,m,sh=true){const b=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);b.position.set(x,y+h/2,z);b.castShadow=sh;b.receiveShadow=true;p.add(b);return b}
 function label(p,t,x,y,z){const c=document.createElement('canvas');c.width=256;c.height=64;const g=c.getContext('2d');
  g.fillStyle='rgba(60,45,35,.85)';g.roundRect?g.roundRect(0,8,256,48,14):g.rect(0,8,256,48);g.fill();
@@ -79,17 +82,31 @@ const zs={front:9,back:-9};
 const gr=new THREE.Mesh(new THREE.PlaneGeometry(120,120),M(0x6c9460));gr.rotation.x=-Math.PI/2;gr.position.y=-.02;gr.receiveShadow=true;S.add(gr);
 box(S,9,.05,26,0,0,1,M(0xbdb7ac),false);
 
-// Tầng 1: sảnh dài 2200 (z 8.9 → 6.7), phòng khách dài 3900 (z 6.7 → 2.8)
-const furn=[ // per floor: [w,h,d,x,z,mat]
- [[.4,.85,1.2,-2.1,7.8,wood],[.4,.45,1.2,2.1,7.7,sofaM],[.9,.8,2.2,1.9,5,sofaM],[.6,.4,1,.8,5,wood],[3,.5,.3,.9,2.5,wood],[1.8,.5,2,.4,-1.6,bedM],[.6,2.1,1.6,2.1,-2.4,wood],[.4,.5,.4,-.7,-.8,wood],[.4,.5,.4,1.55,-.8,wood],[.4,.45,.65,2.1,-3.8,white],[.9,.05,.9,1.2,-4.4,stone],[.6,.85,.4,0,-3.5,white],[.6,.9,2.6,-2.05,-6.5,stone],[.7,1.8,.7,-2,-8.5,white],[1.6,.75,1,.4,-6.6,wood],[.4,.5,.4,0,-5.8,wood],[.4,.5,.4,.8,-5.8,wood],[.4,.5,.4,0,-7.4,wood],[.4,.5,.4,.8,-7.4,wood]],
- [[2.2,1,.5,.7,5.8,wood],[1.2,.5,1,.7,7,wood],[.5,1.3,.5,-.8,5.8,sofaM],[.5,1.8,2.2,2.1,4,wood],[1,.5,1,0,4,wood],[1.8,.5,2,.3,-1.2,bedM],[.6,2.1,1.6,2.1,-2.4,wood],[.4,.5,.4,-.85,-.7,wood],[.4,.5,.4,1.45,-.7,wood],[.4,.45,.65,2.1,-3.8,white],[.9,.05,.9,1.2,-4.4,stone],[.6,.85,.4,0,-3.5,white],[1.8,.5,2,.3,-6,bedM],[.6,2.1,2,2.1,-6.1,wood],[.4,.5,.4,-.85,-5.2,wood],[.4,.5,.4,1.45,-5.2,wood],[1.2,.75,.5,-1.8,-8.6,wood]],
+// Trục z (tâm tường): trục1=9 · trục2=5.5 · trục3=2.5 · trục4=0.4 · trục5=-3.2 · trục6=-4.9 · trục7=-9
+const furn=[ // per floor: [w,h,d,x,z,mat,yBase?]
+ // Tầng 1 theo bản vẽ: sảnh 2 xe máy · khách (sofa trái, 2 ghế phải) · cầu thang · ngủ 1 · WC1 · bếp + ăn
+ [...bk(-.55,7.5),...bk(-1.6,7.5),
+  [.75,.45,2.15,1.85,4.4,sofaM],[.2,.85,2.15,2.25,4.4,sofaM],[.6,.4,1.1,.85,4.3,wood],
+  [.7,.45,.85,-.25,4.8,sofaM],[.2,.85,.85,-.7,4.8,sofaM],[.7,.45,.85,-.25,3.65,sofaM],[.2,.85,.85,-.7,3.65,sofaM],
+  [1.7,.45,2.1,1.55,-.71,bedM],[1.7,.9,.08,1.55,.3,wood],[.55,.12,.35,1.15,.05,white,.45],[.55,.12,.35,1.95,.05,white,.45],[.4,.5,.4,.4,.12,wood],[.6,2.1,1.9,-.9,-.61,wood],
+  [.4,.8,.2,.8,-3.35,white],[.4,.4,.5,.8,-3.65,white],[.55,.85,.45,-.15,-3.5,white],[1.1,.04,1.1,1.8,-3.85,stone],[.04,2,.04,2.3,-3.35,iron],
+  [.7,1.8,.65,.5,-8.575,steel],[.6,.85,2.79,-2.1,-7.505,cab],[.65,.04,2.84,-2.07,-7.505,stone,.85],[.5,.03,.5,-2.07,-7,iron,.89],
+  [1.87,.85,.6,-.785,-8.6,cab],[1.92,.04,.65,-.785,-8.6,stone,.85],[.8,.04,.45,-.7,-8.6,steel,.88],
+  [1.8,.06,.8,1.4,-6.9,wood,.72],[.06,.72,.06,.6,-6.6,wood],[.06,.72,.06,2.2,-6.6,wood],[.06,.72,.06,.6,-7.2,wood],[.06,.72,.06,2.2,-7.2,wood],
+  ...[.8,1.4,2].flatMap(x=>[[.4,.45,.4,x,-6.3,wood],[.4,.4,.05,x,-6.1,wood,.45],[.4,.45,.4,x,-7.5,wood],[.4,.4,.05,x,-7.7,wood,.45]])],
+ [[1.5,.9,.7,.75,5.95,wood],[.5,.4,.3,.75,5.95,gold,.9],
+  [1.7,.45,2.1,1.55,-.71,bedM],[1.7,.9,.08,1.55,.3,wood],[.55,.12,.35,1.15,.05,white,.45],[.55,.12,.35,1.95,.05,white,.45],[.4,.5,.4,.4,.12,wood],[.6,2.1,1.9,-.9,-.61,wood],
+  [.4,.8,.2,.8,-3.35,white],[.4,.4,.5,.8,-3.65,white],[.55,.85,.45,-.15,-3.5,white],[1.1,.04,1.1,1.8,-3.85,stone],[.04,2,.04,2.3,-3.35,iron],
+  [3,2.1,.6,.9,-5.26,wood],[1.6,.45,2.1,.94,-7.75,bedM],[1.6,.9,.08,.94,-8.84,wood],[.55,.12,.35,.55,-8.55,white,.45],[.55,.12,.35,1.33,-8.55,white,.45],[.35,.45,1.8,2.2,-7.3,wood],[.4,.5,.4,2.1,-8.65,wood],[.4,.5,.4,2.15,-5.95,wood]],
  [[.4,.45,.65,2.1,-3.8,white],[.9,.05,.9,1.2,-4.4,stone],[.6,.85,.4,-.4,-3.5,white]]];
 const names=[["Sảnh","Phòng khách","Cầu thang","Phòng ngủ 1","WC1","Bếp + ăn"],["Phòng thờ","Phòng dự trữ","Cầu thang","Phòng ngủ 2","WC2","Phòng ngủ 3"],["Phòng trống","Phòng trống","Cầu thang","Phòng trống","WC","Phòng trống"]];
 const lz=[7.25,4,1.45,-1.4,-4.05,-7];
-const LZ=[[7.8,4.75,1.45,-1.4,-4.05,-7],lz,lz];
+const LZ=[[7.75,4.55,1.45,-1.4,-4.05,-7],lz,lz];
 function part(g,z,g0,g1){box(g,g0+2.5,H-.2,.12,(g0-2.5)/2,.2,z,wallM);box(g,2.5-g1,H-.2,.12,(g1+2.5)/2,.2,z,wallM)}
 const warm=M(0xcdb48a,{emissive:0x2a1f0e}),CX=.7;
-function win(g,w,h,x,y,z,arch){
+function mirror(g,n0){g.children.slice(n0).forEach(c=>{const m=c.clone();m.position.z=18-c.position.z;m.scale.z*=-1;g.add(m)})}
+function win(g,w,h,x,y,z,arch){const n0=g.children.length;win0(g,w,h,x,y,z,arch);mirror(g,n0)}
+function win0(g,w,h,x,y,z,arch){
  box(g,w,h,.08,x,y,z,frame);box(g,w-.14,h-.14,.05,x,y+.07,z+.04,warm);
  box(g,w*.2,h-.2,.03,x-w*.3,y+.1,z+.07,curt);box(g,w*.2,h-.2,.03,x+w*.3,y+.1,z+.07,curt);
  box(g,.05,h-.1,.07,x,y+.05,z+.05,frame);box(g,w-.1,.05,.07,x,y+h*.45,z+.05,frame);
@@ -99,6 +116,25 @@ function win(g,w,h,x,y,z,arch){
  box(g,.1,h,.06,x-w/2-.06,y,z-.01,white);box(g,.1,h,.06,x+w/2+.06,y,z-.01,white);
  box(g,w+.26,.1,.06,x,y-.05,z-.01,white);
 }
+// cửa sổ / cửa đi mặt sau: s=-1 hướng ra ngoài, s=1 hướng vào trong
+function bw(g,w,h,x,y,z,s,door){
+ const q=d=>z+s*d;
+ box(g,w,h,.08,x,y,z,frame);
+ box(g,w-.14,h-.14,.05,x,y+.07,q(.04),warm);
+ if(door){
+  box(g,.1,h-.14,.07,x,y+.07,q(.05),frame);
+  [-.14,.14].forEach(k=>box(g,.04,.5,.05,x+k,y+.9,q(.1),gold));
+  box(g,w+.26,.1,.06,x,y+h,q(-.01),white);
+ }else{
+  box(g,w*.2,h-.2,.03,x-w*.3,y+.1,q(.07),curt);
+  box(g,w*.2,h-.2,.03,x+w*.3,y+.1,q(.07),curt);
+  box(g,.05,h-.1,.07,x,y+.05,q(.05),frame);
+  box(g,w-.1,.05,.07,x,y+h*.45,q(.05),frame);
+  box(g,w+.26,.1,.06,x,y-.05,q(-.01),white);
+ }
+ box(g,.1,h,.06,x-w/2-.06,y,q(-.01),white);
+ box(g,.1,h,.06,x+w/2+.06,y,q(-.01),white);
+}
 function rail(g,x0,x1,z,d,el=1,er=1){
  const w=x1-x0,cx=(x0+x1)/2,n=Math.floor(w/.15);
  box(g,w,.2,d,cx,-.2,z+d/2,white);box(g,w,.06,.06,cx,.95,z+d-.03,iron);
@@ -107,17 +143,37 @@ function rail(g,x0,x1,z,d,el=1,er=1){
  for(let i=0;i<=n;i++)box(g,.03,.9,.03,x0+i*w/n,.05,z+d-.03,iron);
 }
 function plan1(g){const h=H-.2;
+ // sảnh -0.100: nền + 2 bậc 800 hai bên (giữa mở 3000) tại z=6.6
+ box(g,4.6,.02,2.3,0,0,7.75,M(0xbfb09a),false);
  part(g,6.7,-1.5,1.5);
- box(g,3.4,h,.12,.8,0,.4,wallM);box(g,.12,h,2.51,-.9,0,-.855,wallM);
- box(g,3.4,h,.12,.8,0,-3.2,wallM);box(g,.12,h,.8,-.55,0,-3.6,wallM);box(g,3.05,h,.12,.975,0,-4.9,wallM);
- box(g,4.6,.02,2.2,0,0,7.8,M(0xbfb09a),false);
- box(g,.99,2.2,.08,1.6,0,-9.12,wood);box(g,1.67,1.4,.08,-.66,.9,-9.12,glass);box(g,1.2,.15,.5,1.6,0,-9.5,stone);
+ // vách lam gỗ che cầu thang (trục 3, chừa hành lang 1450 bên phải) + TV và tủ thấp hướng ra phòng khách
+ box(g,3.35,h,.12,.725,0,2.5,wallM);
+ for(let i=0;i<22;i++)box(g,.09,h-.1,.06,-.8+i*.15,.05,2.59,wood);
+ box(g,1.8,.4,.35,.9,.15,2.75,white);box(g,1.3,.75,.05,.9,1.1,2.6,iron);
+ // phòng ngủ 1 (trục 4→5): cửa D4 trên vách hành lang 1200
+ box(g,3.6,h,.12,.6,0,.4,wallM);box(g,3.6,h,.12,.6,0,-3.2,wallM);
+ box(g,.12,h,2.4,-1.2,0,-.8,wallM);box(g,.12,h,.3,-1.2,0,-3.05,wallM);box(g,.12,h-2.1,.9,-1.2,2.1,-2.45,wallM);box(g,.85,2.05,.04,-.775,0,-2.9,wood);
+ // WC1 (trục 5→6): cửa mở ra hành lang 1650, vách khu tắm bên trái
+ box(g,.12,h,.54,-.75,0,-3.53,wallM);box(g,.12,h,.3,-.75,0,-4.75,wallM);box(g,.12,h-2.1,.8,-.75,2.1,-4.2,wallM);box(g,.8,2.05,.04,-.35,0,-4.6,wood);
+ box(g,3.15,h,.12,.825,0,-4.9,wallM);box(g,.08,h,1.1,1.25,0,-3.81,wallM);
+ // vách lam gỗ thấp (1.3 m) ngăn khu bếp với bàn ăn, chừa lối vào bếp ở phía sau
+ box(g,1,1.3,.12,-1.9,0,-6.05,wallM);box(g,1,.05,.16,-1.9,1.3,-6.05,wood);
+ for(let i=0;i<7;i++)box(g,.09,1.2,.06,-2.3+i*.15,.05,-5.96,wood);
+ // cửa sau D3 + cửa sổ B-2
+ bw(g,.99,2.2,1.6,0,-9.12,-1,1);bw(g,1.67,1.4,-.66,.9,-9.12,-1);bw(g,.99,2.2,1.6,0,-8.88,1,1);bw(g,1.67,1.4,-.66,.9,-8.88,1);box(g,1.2,.15,.5,1.6,0,-9.5,stone);
 }
 function plan2(g){const h=H-.2;
  box(g,3.6,h,.12,.7,0,5.5,wallM);box(g,.12,h,1.81,-1.1,0,4.595,wallM);box(g,.12,h,.2,-1.1,0,2.6,wallM);
- box(g,3.6,h,.12,.7,0,2.5,wallM);box(g,3.6,h,.12,.7,0,.4,wallM);box(g,.12,h,2.51,-1.1,0,-.855,wallM);
- box(g,3.6,h,.12,.7,0,-3.2,wallM);box(g,.12,h,.8,-.55,0,-3.6,wallM);box(g,3.05,h,.12,.975,0,-4.9,wallM);
- box(g,.99,2.2,.08,-.6,0,-9.14,glass);box(g,1.38,1.4,.08,.88,.9,-9.14,glass);
+ box(g,3.6,h,.12,.7,0,2.5,wallM);box(g,3.6,h,.12,.7,0,.4,wallM);
+ // phòng ngủ 2: vách hành lang x=-1.2, cửa D4 gần cuối phòng
+ box(g,.12,h,2.4,-1.2,0,-.8,wallM);box(g,.12,h,.3,-1.2,0,-3.05,wallM);box(g,.12,h-2.1,.9,-1.2,2.1,-2.45,wallM);box(g,.85,2.05,.04,-.775,0,-2.9,wood);
+ box(g,3.6,h,.12,.7,0,-3.2,wallM);
+ // WC2: cửa mở ra hành lang, vách khu tắm bên trái
+ box(g,.12,h,.54,-.75,0,-3.53,wallM);box(g,.12,h,.3,-.75,0,-4.75,wallM);box(g,.12,h-2.1,.8,-.75,2.1,-4.2,wallM);box(g,.8,2.05,.04,-.35,0,-4.6,wood);
+ box(g,3.2,h,.12,.8,0,-4.9,wallM);box(g,.08,h,1.1,1.25,0,-3.81,wallM);
+ // phòng ngủ 3: lối vào D4 ở góc trước bên phải
+ box(g,.6,h,.12,-2.1,0,-4.9,wallM);box(g,1,h-2.1,.12,-1.3,2.1,-4.9,wallM);box(g,.04,2.05,.85,-1.8,0,-5.35,wood);
+ bw(g,.99,2.2,-.6,0,-9.14,-1,1);bw(g,1.38,1.4,.88,.9,-9.14,-1);
  box(g,5,.2,1.2,0,-.2,-9.7,white);box(g,5,.06,.06,0,.95,-10.27,iron);
  box(g,.06,.06,1.2,-2.5,.95,-9.7,iron);box(g,.06,.06,1.2,2.5,.95,-9.7,iron);
  for(let i=0;i<=33;i++)box(g,.03,.9,.03,-2.5+i*.15,.05,-10.27,iron);
@@ -135,11 +191,11 @@ function facade2(g,f){
  if(f<2)box(g,W+.3,.4,.45,0,H-.4,9.25,white);else{box(g,2.51,.4,.45,-1.395,H-.4,9.25,white);box(g,1.19,.4,.45,2.055,H-.4,9.25,white)}
  if(f==0){[-1,1].forEach(s=>{box(g,.5,.7,.3,s*2.125,0,9.2,M(0x6b6560));box(g,.45,H-1.2,.25,s*2.125,.7,9.2,white);box(g,.6,.3,.32,s*2.125,H-.5,9.2,white);box(g,.14,.3,.14,s*2.125,1.8,9.4,lamp)});
   // cửa đi 2 cánh kính, khung đen
-  box(g,2.8,2.7,.08,0,0,z,frame);box(g,2.64,2.54,.05,0,.08,z+.04,warm);
+  const n0=g.children.length;box(g,2.8,2.7,.08,0,0,z,frame);box(g,2.64,2.54,.05,0,.08,z+.04,warm);
   [-.9,-.45,.45,.9].forEach(x=>box(g,.05,2.54,.07,x,.08,z+.05,frame));box(g,.1,2.54,.08,0,.08,z+.05,frame);
   [.7,1.35,2.0].forEach(y=>box(g,2.64,.05,.07,0,y,z+.05,frame));
   [-.14,.14].forEach(x=>box(g,.04,.5,.05,x,.9,z+.1,gold));
-  box(g,3.0,.1,.1,0,2.7,z+.02,white)}
+  box(g,3.0,.1,.1,0,2.7,z+.02,white);mirror(g,n0)}
  if(f==1){win(g,.93,1.42,-1.53,.9,z,true);win(g,1.66,2.375,.6,0,z,false);box(g,1.5,.05,.07,.6,1.9,z+.05,frame);
   rail(g,-2.4,-.53,9.1,1.1,1,0);rail(g,-.53,1.85,9.1,1.1,0,0);rail(g,1.85,2.4,9.1,1.1,0,1);col(g,-.53,H-.2);col(g,1.85,H-.2)}
  if(f==2){win(g,.93,1.42,-1.53,.9,z,true);win(g,1.4,2.76,.66,0,z,true);
@@ -149,7 +205,7 @@ function facade2(g,f){
 function plan3(g){const h=H-.2;
  box(g,3.25,h,.12,.875,0,2.5,wallM);box(g,3.25,h,.12,.875,0,.4,wallM);
  box(g,3.6,h,.12,.7,0,-3.2,wallM);box(g,3.6,h,.12,.7,0,-4.9,wallM);box(g,.12,h,.7,-1.1,0,-3.55,wallM);box(g,.12,h,.1,-1.1,0,-4.85,wallM);
- box(g,.99,2.2,.08,-.6,0,-9.14,glass);box(g,1.38,1.4,.08,.88,.9,-9.14,glass);
+ bw(g,.99,2.2,-.6,0,-9.14,-1,1);bw(g,1.38,1.4,.88,.9,-9.14,-1);
  box(g,5,.2,1.2,0,-.2,-9.7,white);box(g,5,.06,.06,0,.95,-10.27,iron);box(g,.06,.06,1.2,-2.5,.95,-9.7,iron);box(g,.06,.06,1.2,2.5,.95,-9.7,iron);
  for(let i=0;i<=33;i++)box(g,.03,.9,.03,-2.5+i*.15,.05,-10.27,iron);
  for(let i=1;i<8;i++)box(g,.03,.9,.03,-2.5,.05,-9.1-i*.15,iron);
@@ -165,14 +221,15 @@ for(let f=0;f<3;f++){
  outer.push(box(g,T,H-.2,D,-W/2,.0,0,wallM),box(g,T,H-.2,D,W/2,.0,0,wallM),box(g,W,H-.2,T,0,.0,-9,wallM),box(g,W,H-.2,T,0,.0,9,wallM));
  // partitions
  if(f==0)plan1(g);else if(f==1)plan2(g);else plan3(g);
+ if(f>0){bw(g,.99,2.2,-.6,0,-8.86,1,1);bw(g,1.38,1.4,.88,.9,-8.86,1)}
  // furniture
- furn[f].forEach(a=>box(g,a[0],a[1],a[2],a[3],0,a[4],a[5]));
+ furn[f].forEach(a=>box(g,a[0],a[1],a[2],a[3],a[6]||0,a[4],a[5]));
  g.userData.labels=names[f].map((n,i)=>label(g,n,0,2.6,LZ[f][i]));
  // stairs
  if(f<2){const n=20,rh=H/n;for(let i=0;i<n;i++){const a=i<10,j=a?i:i-10;box(g,.28,.12,.9,a?-.45+j*.28:2.07-j*.28,rh*(i+1)-.12,a?1.9:.95,stone)}box(g,.4,.12,1.9,2.25,10*rh-.12,1.425,stone)}
  facade2(g,f);
- // side windows
- for(const sx of[-1,1])for(const z of[-6,-1,5])box(g,.06,1.4,1,sx*(W/2+.02),1,z,glass);
+ // side windows (tầng 1 là tường chung, không có cửa sổ hông)
+ if(f>0)for(const sx of[-1,1])for(const z of[-6,-1,5])box(g,.06,1.4,1,sx*(W/2+.02),1,z,glass);
 }
 // mái dốc: mặt trước màu kem, ngói đất nung hai bên
 const topY=3*H;
