@@ -160,14 +160,63 @@ function rail(g,x0,x1,z,d,el=1,er=1){
  const m=Math.max(2,Math.floor(d/.15));for(let i=1;i<m;i++){if(el)box(g,.03,.9,.03,x0,.05,z+i*d/m,iron);if(er)box(g,.03,.9,.03,x1,.05,z+i*d/m,iron)}
  for(let i=0;i<=n;i++)box(g,.03,.9,.03,x0+i*w/n,.05,z+d-.03,iron);
 }
+// lan can cầu thang: song sắt đen + tay vịn gỗ chạy dốc theo vế thang hướng ra phòng khách
+function stairRail(g,z=2.3,x0=2.3){
+ const rh=H/20,x1=-.45,s=9*rh/2.52,ang=-Math.atan(s);
+ const yn=x=>11*rh+(2.07-x)*s;            // đường mũi bậc
+ // song đứng
+ for(let x=x1;x<=x0-.1;x+=.13)box(g,.03,.93,.03,x,yn(x)-.03,z,iron);
+ // trụ đầu + trụ cuối (to hơn, có nắp)
+ [x0,x1].forEach(x=>{box(g,.08,1.05,.08,x,yn(x)-.05,z,iron);box(g,.11,.04,.11,x,yn(x)+1,z,iron)});
+ const cx=(x0+x1)/2,L=Math.hypot(x0-x1,(x0-x1)*s)+.08;
+ // tay vịn gỗ
+ const hr=new THREE.Mesh(new THREE.BoxGeometry(L,.05,.08),wood);
+ hr.position.set(cx,yn(cx)+.93,z);hr.rotation.z=ang;hr.castShadow=true;g.add(hr);
+ // thanh ngang dưới cho chắc
+ const lr=new THREE.Mesh(new THREE.BoxGeometry(L,.03,.03),iron);
+ lr.position.set(cx,yn(cx)+.08,z);lr.rotation.z=ang;g.add(lr);
+}
+// vách lam gỗ che hông ban công (chắn tầm nhìn sang nhà hàng xóm, cùng ngôn ngữ lam gỗ với vách TV)
+// hh = chiều cao vách; truyền H-.2 để vách cao tới tận trần (đáy sàn tầng trên)
+function sideScreen(g,d,hh){
+ const cm=M(0xf2e9d8),sl=M(0xd9b98c),bx=M(0xc2a070),lf=M(0x3b7d3a),lf2=M(0x58a050),pot=M(0x3a3d40);
+ const leaves=(cx,y,z,n,spread,h)=>{for(let k=0;k<n;k++){const c=new THREE.Mesh(new THREE.ConeGeometry(.035,h+.05*(k%3),5),k%2?lf:lf2);
+  c.position.set(cx+(k%2?-.02:.02),y+h/2,z+(k-(n-1)/2)*spread);c.rotation.x=(k-(n-1)/2)*.09;c.rotation.z=(k%2?1:-1)*.12;c.castShadow=true;g.add(c)}};
+ [1].forEach(s=>{const x=s*2.34,e=.9,zc=9.1+e/2; // x=2.34 → mép ngoài vách trùng mép sàn ban công (2.4), không nhô ra; dài e=.9 → tới giữa cột (z=10)
+  box(g,.12,hh,e,x,0,zc,cm); // bỏ nắp trắng trên đỉnh vách
+  // mảng lam gỗ ngang ở mặt trong vách + 3 hộp cây treo tường (như ảnh tham khảo)
+  const xi=s*2.265,len=Math.min(.62,e-.25);
+  for(let y=.3;y<hh-.1;y+=.14)box(g,.03,.09,e-.2,xi,y,zc,sl);
+  [.45,.9,1.35].forEach(y=>{const xb=s*2.18;box(g,.14,.2,len,xb,y,zc,bx);leaves(xb,y+.2,zc,6,(len-.1)/5,.3)});
+  // chậu cây đặt sàn ở góc
+  box(g,.3,.3,.3,s*2.1,0,9.1+e-.4,pot);leaves(s*2.1,.3,9.1+e-.4,5,.05,.5)})}
+// bồn cây thấp: thành đá, đất, bụi cây tròn
+function planter(g,x,z,w){const lm=M(0x3b7d3a),lm2=M(0x4f9a46);
+ box(g,w,.5,.5,x,0,z,stone);box(g,w+.08,.06,.58,x,.5,z,white);box(g,w-.1,.03,.4,x,.56,z,M(0x4a3a2a),false);
+ [[-.28,.2,.2],[0,.26,.25],[.28,.18,.2],[-.12,.2,.17],[.14,.2,.16]].forEach(([dx,r,h],i)=>{
+  const b=new THREE.Mesh(new THREE.SphereGeometry(r,14,10),i%2?lm2:lm);b.position.set(x+dx*(w/.9),.6+r*.8+h*.3,z+(i%2?.06:-.06));b.castShadow=true;g.add(b)})}
+// lan can vế đi lên đầu tiên (vế phía sau), đặt ở mép trong hở (z≈1.35), phía tường z≈.5 không cần; dốc lên theo +x
+function stairRail1(g,z=1.35,xa=-.45,xb=2.0){
+ const rh=H/20,s=rh/.28,ang=Math.atan(s),yn=x=>rh+(x+.45)*s;
+ for(let x=xa;x<=xb;x+=.13)box(g,.03,.93,.03,x,yn(x)-.03,z,iron);
+ [xa,xb].forEach(x=>{box(g,.08,1.05,.08,x,yn(x)-.05,z,iron);box(g,.11,.04,.11,x,yn(x)+1,z,iron)});
+ const cx=(xa+xb)/2,L=(xb-xa)/Math.cos(ang)+.08;
+ const hr=new THREE.Mesh(new THREE.BoxGeometry(L,.05,.08),wood);
+ hr.position.set(cx,yn(cx)+.93,z);hr.rotation.z=ang;hr.castShadow=true;g.add(hr);
+ const lr=new THREE.Mesh(new THREE.BoxGeometry(L,.03,.03),iron);
+ lr.position.set(cx,yn(cx)+.08,z);lr.rotation.z=ang;g.add(lr);
+}
 function plan1(g){const h=H-.2;
  // sảnh -0.100: nền + 2 bậc 800 hai bên (giữa mở 3000) tại z=6.6
  box(g,4.6,.02,2.3,0,0,7.75,M(0xbfb09a),false);
- part(g,6.7,-1.5,1.5);
+ // 2 bồn cây thấp thay cho 2 đoạn tường hai bên sảnh (chừa giữa 3000)
+ planter(g,-1.95,6.7,.9);planter(g,1.95,6.7,.9);
  // vách lam gỗ che cầu thang (trục 3, chừa hành lang 1450 bên phải) + TV và tủ thấp hướng ra phòng khách
- box(g,3.35,h,.12,.725,0,2.5,wallM);
- for(let i=0;i<22;i++)box(g,.09,h-.1,.06,-.8+i*.15,.05,2.59,wood);
- box(g,1.8,.4,.35,.9,.15,2.75,white);box(g,1.3,.75,.05,.9,1.1,2.6,iron);
+ // lam gỗ sát mép trước vế thang đi lên (z≈1.46), cao như cũ: đỉnh chạy dốc theo mặt dưới vế thang mặt tiền (gần chạm trần bên trái, thấp dần sang phải)
+ for(let i=0;i<19;i++){const x=-.5+i*.15,top=Math.min(h-.05,H-(x+.45)*.668-.18,x>2?1.75:9);box(g,.09,top-.05,.06,x,.05,1.46,wood)}
+ // TV treo giữa vách lam (như bản trước) + tủ thấp mặt gỗ phía trước
+ box(g,1.3,.75,.05,.9,1.1,1.52,iron);
+ box(g,2.8,.26,.4,1,.1,1.72,white);box(g,2.84,.04,.44,1,.36,1.72,wood);box(g,2.7,.1,.34,1,0,1.72,wood);
  // phòng ngủ 1 (trục 4→5): cửa D4 trên vách hành lang 1200
  box(g,3.6,h,.12,.6,0,.4,wallM);box(g,3.6,h,.12,.6,0,-3.2,wallM);
  box(g,.12,h,2.4,-1.2,0,-.8,wallM);box(g,.12,h,.3,-1.2,0,-3.05,wallM);box(g,.12,h-2.1,.9,-1.2,2.1,-2.45,wallM);box(g,.85,2.05,.04,-.775,0,-2.9,wood);
@@ -215,9 +264,9 @@ function facade2(g,f){
   [-.14,.14].forEach(x=>box(g,.04,.5,.05,x,.9,z+.1,gold));
   box(g,3.0,.1,.1,0,2.7,z+.02,white);mirror(g,n0)}
  if(f==1){win(g,.93,1.42,-1.53,.9,z,true);win(g,1.66,2.375,.6,0,z,false);box(g,1.5,.05,.07,.6,1.9,z+.05,frame);
-  rail(g,-2.4,-.53,9.1,1.1,1,0);rail(g,-.53,1.85,9.1,1.1,0,0);rail(g,1.85,2.4,9.1,1.1,0,1);col(g,-.53,H-.2);col(g,1.85,H-.2)}
+  rail(g,-2.4,-.53,9.1,1.1,1,0);rail(g,-.53,1.85,9.1,1.1,0,0);rail(g,1.85,2.4,9.1,1.1,0,0);col(g,-.53,H-.2);col(g,1.85,H-.2)}
  if(f==2){win(g,.93,1.42,-1.53,.9,z,true);win(g,1.4,2.76,.66,0,z,true);
-  rail(g,-2.4,-.53,9.1,.95,1,0);rail(g,1.85,2.4,9.1,.95,0,1);bow2(g,.66,1.19,10,.5);col(g,-.53,2.75);col(g,1.85,2.75);
+  rail(g,-2.4,-.53,9.1,.95,1,0);rail(g,1.85,2.4,9.1,.95,0,0);bow2(g,.66,1.19,10,.5);col(g,-.53,2.75);col(g,1.85,2.75);
   [-.53,1.85].forEach(x=>{box(g,.62,.15,.62,x,2.75,10,white);box(g,.3,.2,.9,x,2.75,9.55,white)});}
 }
 function plan3(g){const h=H-.2;
@@ -243,9 +292,11 @@ for(let f=0;f<3;f++){
  // furniture
  furn[f].forEach(a=>box(g,a[0],a[1],a[2],a[3],a[6]||0,a[4],a[5]));
  g.userData.labels=names[f].map((n,i)=>label(g,n,f==2&&i==6?1.95:0,2.6,LZ[f][i]));
- // stairs
- if(f<2){const n=20,rh=H/n;for(let i=0;i<n;i++){const a=i<10,j=a?i:i-10;box(g,.28,.12,.9,a?-.45+j*.28:2.07-j*.28,rh*(i+1)-.12,a?1.9:.95,stone)}box(g,.4,.12,1.9,2.25,10*rh-.12,1.425,stone)}
- facade2(g,f);
+ // stairs: vế đi lên ở phía sau (z=.95), chiếu nghỉ bên phải, vế đi xuống ở phía mặt tiền (z=1.9)
+ if(f<2){const n=20,rh=H/n;for(let i=0;i<n;i++){const a=i<10,j=a?i:i-10;box(g,.28,.12,.9,a?-.45+j*.28:2.07-j*.28,rh*(i+1)-.12,a?.95:1.9,stone)}box(g,.4,.12,1.9,2.25,10*rh-.12,1.425,stone)}
+ if(f==1)stairRail1(g); // tầng 2: lan can vế đi lên đầu tiên
+ if(f<2){if(f==0)stairRail(g);stairRail(g,1.5,1.9)} // tầng 2 phía z=2.3 đã có vách tường nên bỏ lan can ngoài // ngoài (z=2.3) + trong (z=1.5) dừng ở x=1.9, chừa lối qua chiếu nghỉ
+ facade2(g,f);if(f>0)sideScreen(g,f==1?1.1:.95,f==2?2.7:H-.25); // vách bên phải ban công: tầng 2 tới trần, tầng 3 cao bằng cột (2.7) để không đụng mái
  // side windows (tầng 1 là tường chung, không có cửa sổ hông)
  if(f>0)for(const sx of[-1,1])for(const z of[-6,-1,5])box(g,.06,1.4,1,sx*(W/2+.02),1,z,glass);
 }
@@ -363,21 +414,24 @@ function wallGap(f,z,gaps){const y0=.6+f*H,r=[];let a=-2.6;
  floors.forEach(g=>g.traverse(o=>{if(o.isMesh&&o.material===wallM&&!skip.has(o))colls.push(new THREE.Box3().setFromObject(o))}));
  const FG=[[[-1.4,1.4]],[[-.23,1.43]],[[-.04,1.36]]],BG=[[[1.1,2.1]],[[-1.1,-.1]],[[-1.1,-.1]]];
  for(let f=0;f<3;f++)colls.push(...wallGap(f,9,FG[f]),...wallGap(f,-9,BG[f]))})();
+[-1.95,1.95].forEach(x=>colls.push(new THREE.Box3(new THREE.Vector3(x-.45,.6,6.45),new THREE.Vector3(x+.45,1.5,6.95)))); // bồn cây sảnh
+colls.push(new THREE.Box3(new THREE.Vector3(-.55,.6,1.44),new THREE.Vector3(2.4,2.6,1.95))); // vách lam gỗ + tủ TV
 colls.push(new THREE.Box3(new THREE.Vector3(-1.05,.6+3*H,-9),new THREE.Vector3(.45,.6+3*H+1.4,-7.5)),new THREE.Box3(new THREE.Vector3(.45,.6+3*H,-8.75),new THREE.Vector3(1.55,.6+3*H+1.2,-7.25)));
 function hit(x,z,fy){const r=.25,y0=fy+.35,y1=fy+1.7;
  for(const b of colls){if(b.max.y<y0||b.min.y>y1)continue;
   if(x+r>b.min.x&&x-r<b.max.x&&z+r>b.min.z&&z-r<b.max.z)return true}return false}
 
 // độ cao mặt đứng: sàn từng tầng + bậc thang (2 vế, chiếu nghỉ ở x≈2.3)
+// vế đi lên ở phía sau (z≈.95), vế đi xuống ở phía mặt tiền (z≈1.9)
 function stairTop(x,z){
  if(z>.475&&z<2.375&&x>2.21&&x<2.45)return 10*RH;
  if(x<-.59||x>2.21)return -1;
- if(z>=1.425&&z<2.35)return RH*(Math.min(9,Math.max(0,Math.round((x+.45)/.28)))+1);
- if(z>.5&&z<1.425)return RH*(Math.min(9,Math.max(0,Math.round((2.07-x)/.28)))+11);
+ if(z>.5&&z<1.425)return RH*(Math.min(9,Math.max(0,Math.round((x+.45)/.28)))+1);
+ if(z>=1.425&&z<2.35)return RH*(Math.min(9,Math.max(0,Math.round((2.07-x)/.28)))+11);
  return -1}
 function groundY(x,z,fy){let b=-9;const c=y=>{if(y<=fy+.6&&y>b)b=y};
  c(Math.max(0,.6-Math.max(Math.abs(x)-2.7,z>0?z-10.4:-z-9.2,0)*.5));
- const well=x>-.6&&x<2.45&&z>.4&&z<2.5,st=stairTop(x,z);
+ const well=x>-.5&&x<2.45&&z>.4&&z<2.5,st=stairTop(x,z);
  for(let L=0;L<3;L++){if(L&&!well)c(.6+L*H);if(L<2&&st>=0)c(.6+L*H+st)}
  // sân thượng (trừ lỗ thang xoắn) + 18 bậc thang xoắn tầng 3 → mái, tâm (1.95,-9.9)
  if(z<-7.3&&z>-10.2&&Math.abs(x)<2.5&&!(x>1.4&&x<2.35&&z<-9.2))c(.6+3*H);
@@ -393,8 +447,9 @@ function walkMove(dt){
  const run=kd('ShiftLeft','ShiftRight'),tm=1,stz=stairTop(wk.x,wk.z)>=0||(wk.fy>3&&Math.hypot(wk.x-1.95,wk.z+9.9)<.8),sp=l<.1?0:(stz?1.6:run?4.2:2.2)*tm*Math.min(1,l);
  const s=Math.sin(th),c=Math.cos(th),dx=c*ix+s*iz,dz=-s*ix+c*iz,L=Math.hypot(dx,dz)||1;
  const mx=dx/L*sp*dt,mz=dz/L*sp*dt;
- if(!hit(wk.x+mx,wk.z,wk.fy))wk.x+=mx;
- if(!hit(wk.x,wk.z+mz,wk.fy))wk.z+=mz;
+ const okMove=(x,z)=>!hit(x,z,wk.fy)&&wk.fy-groundY(x,z,wk.fy)<=1;
+ if(okMove(wk.x+mx,wk.z))wk.x+=mx;
+ if(okMove(wk.x,wk.z+mz))wk.z+=mz;
  wk.x=Math.max(-40,Math.min(40,wk.x));wk.z=Math.max(-40,Math.min(40,wk.z));
  if(wk.fy>3){wk.x=Math.max(-2.45,Math.min(2.45,wk.x));wk.z=Math.max(-10.15,Math.min(10.1,wk.z))} // tầng trên: không rơi khỏi ban công
  if(wk.fy>.6+2*H+3){wk.x=Math.max(-2.2,Math.min(2.2,wk.x));wk.z=Math.max(-9.95,Math.min(-7.55,wk.z))} // sân thượng
@@ -404,22 +459,22 @@ function walkMove(dt){
  if(wk.cd>0)wk.cd-=dt;else{const d=Math.hypot(wk.x-1.95,wk.z+9.9);
   if(d<.85&&Math.abs(wk.fy-(.6+2*H))<.7)wk.ride={dir:1,t:0,fx:wk.x,fz:wk.z,fy:wk.fy};
   else if(d<.8&&Math.abs(wk.fy-(.6+3*H))<.6)wk.ride={dir:-1,t:0,fx:wk.x,fz:wk.z,fy:wk.fy};
-  // chạm đầu cầu thang giữa các tầng → tự lên (vế gần mặt tiền) / tự xuống (vế phía sau)
+  // chạm đầu cầu thang giữa các tầng → tự lên (vế phía sau) / tự xuống (vế phía mặt tiền)
   else{const Lf=Math.round((wk.fy-.6)/H);
-   if(Math.abs(wk.fy-(.6+Lf*H))<.5&&wk.x>-.5&&wk.x<.3&&wk.z>.55&&wk.z<2.3){
-    if(Lf<2&&wk.z>=1.425)startStair(Lf,1);else if(Lf>0&&Lf<3&&(wk.z<1.425||Lf==2))startStair(Lf-1,-1)}}}
+   if(Math.abs(wk.fy-(.6+Lf*H))<.5&&wk.x>-.55&&wk.x<.3&&wk.z>.55&&wk.z<2.3){
+    if(Lf<2&&wk.z<1.425)startStair(Lf,1);else if(Lf>0&&Lf<3&&(wk.z>=1.425||Lf==2))startStair(Lf-1,-1)}}}
  return sp}
 // thang xoắn tự động: bước vào → quay quanh trụ lên mái (hoặc xuống), rồi đặt nhân vật xuống sàn
 function sp3(u){const a=8.5*u,r=.42;return[1.95+r*Math.cos(a),-9.9+r*Math.sin(a),.6+2*H+.225+a*.4]}
 // cầu thang giữa các tầng: đi dọc 2 vế + chiếu nghỉ, L = tầng dưới, dir 1 lên / -1 xuống
 function stairPts(L,dir){const B=.6+L*H,q=(x,z,h)=>[x,z,B+h],
- A=[q(-.45,1.9,RH),q(2.07,1.9,10*RH),q(2.25,1.9,10*RH),q(2.25,.95,10*RH),q(2.07,.95,11*RH),q(-.45,.95,H)];
- return dir>0?[...A,q(-.95,.95,H)]:[...A.reverse(),q(-1,1.9,0)]}
+ A=[q(-.45,.95,RH),q(2.07,.95,10*RH),q(2.25,.95,10*RH),q(2.25,1.9,10*RH),q(2.07,1.9,11*RH),q(-.45,1.9,H)];
+ return dir>0?[...A,q(-.95,1.9,H)]:[...A.reverse(),q(-1,.95,0)]}
 function startStair(L,dir){wk.ride={pts:[[wk.x,wk.z,wk.fy],...stairPts(L,dir)],d:0}}
 function polyStep(dt){const R=wk.ride,p=R.pts;R.d+=dt*2.6;let d=R.d,pos=null;
  for(let i=0;i<p.length-1&&!pos;i++){const a=p[i],b=p[i+1],l=Math.hypot(b[0]-a[0],b[1]-a[1])||1e-6;
   if(d<=l){const k=d/l;pos=[a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k,a[2]+(b[2]-a[2])*k]}else d-=l}
- if(!pos){pos=p[p.length-1];wk.ride=null;wk.cd=1.5}
+ if(!pos){pos=p[p.length-1];wk.ride=null;wk.cd=0}
  const ox=wk.x,oz=wk.z;wk.x=pos[0];wk.z=pos[1];wk.fy=pos[2];
  const mx=wk.x-ox,mz=wk.z-oz;if(mx*mx+mz*mz>1e-8){let d2=Math.atan2(mx,mz)-wk.yaw;d2=Math.atan2(Math.sin(d2),Math.cos(d2));wk.yaw+=d2*Math.min(1,dt*12)}
  wk.t+=dt*2.2*2.6;return 2.2}

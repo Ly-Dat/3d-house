@@ -42,7 +42,8 @@ Trang web tĩnh hiển thị mô hình 3D nhà phố 3 tầng (mặt tiền 5 m,
         ├── cau-thang.jpg
         ├── phong-trong-3.jpg
         ├── wc.jpg
-        └── phong-trong-4.jpg
+        ├── phong-trong-4.jpg
+        └── thang-xoan.jpg
 ```
 
 ## Cách thêm ảnh
