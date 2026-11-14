@@ -430,7 +430,7 @@ for(let f=0;f<3;f++){
  g.userData.labels=names[f].map((n,i)=>label(g,n,f==2&&i==6?1.95:0,2.6,LZ[f][i]));
  // stairs: vế đi lên ở phía sau (z=.95), chiếu nghỉ bên phải, vế đi xuống ở phía mặt tiền (z=1.9)
  if(f<2){const n=20,rh=H/n;for(let i=0;i<n;i++){const a=i<10,j=a?i:i-10;box(g,.28,.12,.9,a?-.45+j*.28:2.07-j*.28,rh*(i+1)-.12,a?.95:1.9,stone)}box(g,.4,.12,1.9,2.25,10*rh-.12,1.425,stone)}
- if(f==1)stairRail1(g); // tầng 2: lan can vế đi lên đầu tiên
+ if(f<2)stairRail1(g); // tầng 1 + tầng 2: lan can vế đi lên đầu tiên
  if(f<2){if(f==0)stairRail(g);stairRail(g,1.5,1.9)} // tầng 2 phía z=2.3 đã có vách tường nên bỏ lan can ngoài // ngoài (z=2.3) + trong (z=1.5) dừng ở x=1.9, chừa lối qua chiếu nghỉ
  facade2(g,f);if(f>0)sideScreen(g,f==1?1.1:.95,f==2?2.7:H-.25); // vách bên phải ban công: tầng 2 tới trần, tầng 3 cao bằng cột (2.7) để không đụng mái
  // side windows (tầng 1 là tường chung, không có cửa sổ hông)
