@@ -92,7 +92,6 @@ const furn=[ // per floor: [w,h,d,x,z,mat,yBase?]
  // Tầng 1 theo bản vẽ: sảnh 2 xe máy · khách (sofa trái, 2 ghế phải) · cầu thang · ngủ 1 · WC1 · bếp + ăn
  [...bk(-.55,7.5),...bk(-1.6,7.5),
   [.75,.45,2.15,1.85,4.4,sofaM],[.2,.85,2.15,2.25,4.4,sofaM],[.6,.4,1.1,.85,4.3,wood],
-  [.7,.45,.85,-.25,4.8,sofaM],[.2,.85,.85,-.7,4.8,sofaM],[.7,.45,.85,-.25,3.65,sofaM],[.2,.85,.85,-.7,3.65,sofaM],
   [1.7,.45,2.1,1.55,-.71,bedM],[1.7,.9,.08,1.55,.3,wood],[.55,.12,.35,1.15,.05,white,.45],[.55,.12,.35,1.95,.05,white,.45],[.4,.5,.4,.4,.12,wood],[.6,2.1,1.9,-.9,-.61,wood],
   [.4,.8,.2,.8,-3.35,white],[.4,.4,.5,.8,-3.65,white],[.55,.85,.45,-.15,-3.5,white],[1.1,.04,1.1,1.8,-3.85,stone],[.04,2,.04,2.3,-3.35,iron],
   [.7,1.8,.65,.5,-8.575,steel],[.6,.85,2.79,-2.1,-7.505,cab],[.65,.04,2.84,-2.07,-7.505,stone,.85],[.5,.03,.5,-2.07,-7,iron,.89],
@@ -195,7 +194,7 @@ function planter(g,x,z,w){const lm=M(0x3b7d3a),lm2=M(0x4f9a46);
  box(g,w,.5,.5,x,0,z,stone);box(g,w+.08,.06,.58,x,.5,z,white);box(g,w-.1,.03,.4,x,.56,z,M(0x4a3a2a),false);
  [[-.28,.2,.2],[0,.26,.25],[.28,.18,.2],[-.12,.2,.17],[.14,.2,.16]].forEach(([dx,r,h],i)=>{
   const b=new THREE.Mesh(new THREE.SphereGeometry(r,14,10),i%2?lm2:lm);b.position.set(x+dx*(w/.9),.6+r*.8+h*.3,z+(i%2?.06:-.06));b.castShadow=true;g.add(b)})}
-// lan can vế đi lên đầu tiên (vế phía sau), đặt ở mép trong hở (z≈1.35), phía tường z≈.5 không cần; dốc lên theo +x
+  // lan can vế đi lên đầu tiên (vế phía sau), đặt ở mép trong hở (z≈1.35), phía tường z≈.5 không cần; dốc lên theo +x
 function stairRail1(g,z=1.35,xa=-.45,xb=2.0){
  const rh=H/20,s=rh/.28,ang=Math.atan(s),yn=x=>rh+(x+.45)*s;
  for(let x=xa;x<=xb;x+=.13)box(g,.03,.93,.03,x,yn(x)-.03,z,iron);
@@ -206,6 +205,140 @@ function stairRail1(g,z=1.35,xa=-.45,xb=2.0){
  const lr=new THREE.Mesh(new THREE.BoxGeometry(L,.03,.03),iron);
  lr.position.set(cx,yn(cx)+.08,z);lr.rotation.z=ang;g.add(lr);
 }
+// tủ âm dưới vế thang đầu tiên (vế đi lên từ mặt đất, z .5→1.4, thấp ở x=-.45 và cao dần về +x), mặt tủ hướng +z
+// S(x) = đường đáy dốc (mặt dưới ván gỗ) của vế thang; mọi khoang đều chạy tới sát đường này, không còn khúc trống
+function stairCab(g){
+ const zc=.95,d=.9,zf=1.405,iz=1.15,rh=H/20,sl=.668,S=x=>sl*x+.259,
+  x0=-.259/sl, // điểm đáy dốc chạm sàn ≈ -0.388 (chân thang)
+  cw=M(0xf4efe6),wd=M(0xc99a63),gl=M(0xbcd4dc,{transparent:true,opacity:.35,roughness:.1}),
+  bag=M(0x1a1a1a),pl=M(0x3b7d3a),bk=[M(0xb86a4a),M(0xe4d8c0),M(0x5a7a8a),M(0xd9b44a)];
+ const ln=(x,y,h)=>box(g,.015,h,.02,x,y,zf,wd),hd=(x,y)=>box(g,.15,.02,.02,x,y,zf+.01,gold);
+ const leaf=(x,y,z,r)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),pl);m.position.set(x,y,z);m.castShadow=true;g.add(m)};
+ const prism=(pts,z0,dep,m)=>{const sh=new THREE.Shape();sh.moveTo(pts[0][0],pts[0][1]);pts.slice(1).forEach(q=>sh.lineTo(q[0],q[1]));sh.closePath();
+  const e=new THREE.Mesh(new THREE.ExtrudeGeometry(sh,{depth:dep,bevelEnabled:false}),m);e.position.z=z0;e.castShadow=e.receiveShadow=true;g.add(e)};
+ const strip=(xc,w)=>{const m=box(g,w,.02,.6,xc,0,zc,lamp);m.position.y=S(xc)-.04;m.rotation.z=Math.atan(sl)};
+ // thân vế thang: trên là mặt bậc, dưới là đáy dốc chạy xuống tận sàn ở chân thang
+ const top=[];for(let j=0;j<10;j++){const c=-.45+.28*j,y=rh*(j+1)-.005;top.push([c-.14,y],[c+.14,y])}
+ top[top.length-1][0]=2.05;
+ prism([[-.59,0],...top,[2.05,S(2.05)],[x0,0]],.46,.94,stone);
+ // ván gỗ ốp dốc dưới các bậc, kéo dài tới chân thang
+ const tr=new THREE.Mesh(new THREE.BoxGeometry((2.05-x0)*Math.hypot(1,sl),.05,d),wd);
+ tr.position.set((2.05+x0)/2,S((2.05+x0)/2)-.025,zc);tr.rotation.z=Math.atan(sl);tr.castShadow=true;g.add(tr);
+ // vách sau gỗ liền cho các khoang (từ chân thang)
+ prism([[x0,0],[2.4,0],[2.4,1.68],[2.05,1.68],[2.05,S(2.05)]],.5,.04,wd);
+ // hàng ngăn kéo trắng chạy liền (x .5–2.4), cao .55
+ box(g,.425,.55,d,.7125,0,zc,cw);box(g,.425,.55,d,2.1875,0,zc,cw);[.5,1.975].forEach(x=>ln(x,0,.55));[.7125,2.1875].forEach(x=>hd(x,.45));
+ // cánh tủ nối dài tới chân thang, cao thấp dần theo đáy dốc
+ const dx0=x0+.06;
+ prism([[dx0,0],[.5,0],[.5,S(.5)-.03],[dx0,S(dx0)-.03]],1.4,.03,cw);
+ ln(.05,0,S(.05)-.03);hd(.3,.25);
+ // khoang 1 (x .5–1.0): chậu cây nhỏ
+ box(g,.12,.12,.12,.8,.55,iz,wd);leaf(.8,.74,iz,.08);strip(.72,.3);
+ // bàn thờ
+ {const ax=1.45,wW=1.05,dk=M(0x6e4223),lt=M(0xb07a45),sk=M(0xe0b090),bl=M(0x4a6fa5),fl=M(0xe8c53a),og=M(0xe08a3a),rd=M(0xc0392b);
+ const sph=(r,x,y,z,m)=>{const s=new THREE.Mesh(new THREE.SphereGeometry(r,12,10),m);s.position.set(x,y,z);s.castShadow=true;g.add(s)};
+ // bệ: sát tường (z .54) tới mặt tủ (z 1.40), kẹp giữa 2 tủ ngăn kéo
+ box(g,wW,.28,.86,ax,0,.97,lt);
+ box(g,.9,.16,.02,ax,.06,1.405,dk);box(g,.92,.012,.02,ax,.04,1.41,gold);box(g,.92,.012,.02,ax,.23,1.41,gold);
+ box(g,wW,.04,.86,ax,.28,.97,dk);
+ // khoang thờ: lưng, 2 hông, mái, diềm, vạt trước (thấp hơn để lọt dưới đáy dốc thang)
+ box(g,.97,.4,.04,ax,.32,.58,dk);
+ box(g,.04,.41,.56,.945,.32,.84,lt);box(g,.04,.41,.56,1.955,.32,.84,lt);
+ box(g,wW,.04,.62,ax,.73,.85,lt);box(g,wW,.03,.64,ax,.77,.86,dk);box(g,.97,.07,.03,ax,.66,1.13,lt);
+ // 2 tượng Thần Tài, Thổ Địa
+ [[-.22,gold],[.22,M(0x8a2a2a)]].forEach(([k,m])=>{box(g,.17,.2,.13,ax+k,.32,.78,m);sph(.05,ax+k,.58,.78,sk);box(g,.12,.03,.1,ax+k,.62,.78,iron)});
+ // mặt bệ phía trước: bát hương giữa, trái cây trái, bình hoa phải
+ const bh=new THREE.Mesh(new THREE.CylinderGeometry(.06,.045,.07,16),gold);bh.position.set(ax,.355,1.25);bh.castShadow=true;g.add(bh);
+ sph(.04,ax-.3,.36,1.22,og);sph(.04,ax-.24,.36,1.27,rd);sph(.04,ax-.34,.36,1.27,og);
+ box(g,.08,.14,.08,ax+.3,.32,1.2,bl);sph(.07,ax+.3,.52,1.2,fl);
+ // 2 đèn lồng đỏ treo dưới vạt trước
+ [-1,1].forEach(s=>{box(g,.02,.06,.02,ax+s*.42,.6,1.1,iron);box(g,.05,.08,.05,ax+s*.42,.52,1.1,rd)})}
+ // khoang 5 (x 2.05–2.4, dưới chiếu nghỉ): hộc 2 tầng kéo dài tới tường, có đèn, đồ trang trí
+ box(g,.03,1.13,d-.06,2.385,.55,zc,wd);box(g,.35,.07,d,2.225,1.68,zc,wd);
+ box(g,.3,.02,.6,2.225,1.64,zc,lamp);
+ box(g,.15,.06,.2,2.31,.55,iz,bk[1]);box(g,.15,.06,.18,2.31,.61,iz,bk[0]);box(g,.12,.06,.16,2.31,.67,iz,bk[2]);box(g,.08,.12,.08,2.31,.73,iz,bk[3]);
+ box(g,.08,.3,.08,2.1,.55,iz,bk[2]);leaf(2.1,.95,iz,.1);box(g,.1,.16,.1,2.18,.55,iz,gold);
+ box(g,.2,.26,.02,2.225,1.28,.56,iron);box(g,.16,.22,.02,2.225,1.3,.575,bk[0]);
+  // kệ ngang trên bàn thờ: full chiều sâu gầm thang (z .54→1.40), y=1.10, x 1.2→2.4
+   box(g,1.1,.04,.84,1.85,1.10,.96,cw); // kệ x 1.3→2.4, z .54→1.38, đầu trái chìm vào ván thang
+ box(g,.03,.28,.82,2.385,.82,.96,cw); // đầu đỡ sát vách phải
+ box(g,1.1,.015,.02,1.85,1.14,1.39,wd);
+ box(g,.95,.015,.06,1.875,1.085,1.32,lamp); // đèn LED dưới mép trước, x 1.4→2.35
+ // đồ trang trí đặt ở nửa trước kệ (thấp bên trái, cao dần sang phải theo đáy dốc thang)
+ box(g,.2,.05,.15,1.55,1.14,1.15,bk[1]);box(g,.16,.02,.12,1.55,1.19,1.15,bk[0]);
+ box(g,.08,.16,.08,1.85,1.14,1.1,bk[2]);leaf(1.85,1.36,1.1,.07);
+ box(g,.14,.07,.14,2.05,1.14,1.2,gold);
+ box(g,.05,.12,.05,2.22,1.14,1.1,wd);box(g,.12,.1,.12,2.22,1.26,1.1,lamp);
+ // phía sau kệ: khung ảnh nhỏ dựa vách
+ box(g,.24,.3,.02,2.0,1.14,.6,iron);box(g,.2,.26,.02,2.0,1.16,.615,bk[1]);
+ // đồ trang trí (thấp bên trái, cao dần sang phải theo độ dốc đáy thang)
+ box(g,.2,.05,.15,1.55,1.14,.65,bk[1]);box(g,.16,.02,.12,1.55,1.19,.65,bk[0]);
+ box(g,.08,.16,.08,1.85,1.14,.65,bk[2]);leaf(1.85,1.36,.65,.07);
+ box(g,.14,.07,.14,2.05,1.14,.65,gold);
+ box(g,.05,.12,.05,2.22,1.14,.65,wd);box(g,.12,.1,.12,2.22,1.26,.65,lamp);
+}
+// tủ kính cao liền mạch dọc tường phải (x 2.05–2.4, z .5→2.35), nằm dưới chiếu nghỉ; hàng ngăn kéo gầm thang đâm thẳng vào mặt tủ
+function glassCab(g){
+ const x0=2.05,x1=2.4,cx=(x0+x1)/2,z0=1.4,z1=2.35,w=z1-z0,zc=(z0+z1)/2,h=1.7,xf=x0+.015,n=2,cwid=w/n,
+  cw=M(0xf4efe6),wd=M(0xc99a63),gl=M(0xbcd4dc,{transparent:true,opacity:.35,roughness:.1}),bk=[M(0xb86a4a),M(0xe4d8c0),M(0x5a7a8a),M(0x2a2a2a)];
+ box(g,x1-x0,h,.03,cx,0,z0+.015,wd);box(g,x1-x0,h,.03,cx,0,z1-.015,wd);
+ box(g,x1-x0,.03,w,cx,h-.03,zc,wd);box(g,x1-x0,.04,w,cx,0,zc,wd);box(g,.03,h,w,x1-.015,0,zc,wd);
+ for(let i=1;i<n;i++)box(g,x1-x0-.02,h-.07,.02,cx,.04,z0+cwid*i,wd);
+ [.5,1.0].forEach(dy=>box(g,.014,.014,zb-za,-2.044,y0+dy,zm,seam)); // 2 đường ngang thẳng hàng với tấm ngăn của tủ gỗ
+ box(g,.33,.03,w-.06,cx,.78,zc,wd);[1.08,1.38].forEach(y=>box(g,.3,.02,w-.08,cx+.02,y,zc,gl));box(g,.3,.02,w-.1,cx,h-.07,zc,lamp);
+ for(let i=0;i<n;i++){const z=z0+cwid*(i+.5);
+  box(g,.18,.2,.26,2.22,.8,z,bk[(i+1)%4]);box(g,.16,.14,.2,2.22,1.1,z+.05,bk[i%4]);box(g,.08,.26,.08,2.3,1.1,z-.1,bk[3]);box(g,.18,.2,.26,2.22,1.4,z,bk[(i+2)%4]);
+  box(g,.03,.7,cwid-.03,xf,.07,z,cw);
+  const ww=cwid-.03,y0=.82,hh=.82;
+  box(g,.03,.06,ww,xf,y0,z,cw);box(g,.03,.06,ww,xf,y0+hh-.06,z,cw);
+  box(g,.03,hh,.06,xf,y0,z-ww/2+.03,cw);box(g,.03,hh,.06,xf,y0,z+ww/2-.03,cw);
+  box(g,.01,hh-.12,ww-.12,xf-.01,y0+.06,z,gl)}
+ // tay nắm vàng ở giữa mỗi cặp cánh dưới
+ [1].forEach(k=>[-.04,.04].forEach(d=>box(g,.02,.2,.03,xf-.02,.35,z0+cwid*k+d,gold)));
+}
+// tủ bếp trên: dọc tường trái + ô kệ hở góc + tủ cạnh cửa sổ + dải trên cửa sổ + tủ gỗ trên tủ lạnh
+function kitchenUpper(g){
+ const cw=M(0xf4efe6),wd=M(0xc99a63),dw=M(0xa87a4d),sp=M(0xe0d3bb),pl=M(0x3b7d3a),jar=M(0xbcd4dc,{transparent:true,opacity:.55}),pot=M(0xf8f4ea),seam=M(0xd2c6b0);
+ const y0=1.45,hh=1.0;
+ const leaf=(x,y,z,r)=>{const m=new THREE.Mesh(new THREE.SphereGeometry(r,10,8),pl);m.position.set(x,y,z);m.castShadow=true;g.add(m)};
+ // ốp tường bếp (backsplash)
+ box(g,.02,.56,2.8,-2.39,.89,-7.5,sp);box(g,.9,.56,.02,-1.95,.89,-8.89,sp);
+
+ // dãy tủ trắng tường trái: từ góc cửa sổ (z -8.9) tới ô kệ (z -6.75), 6 cánh phẳng, khe mảnh
+ const za=-8.9,zb=-6.75,zm=(za+zb)/2,n=6;
+ box(g,.35,1.0,zb-za,-2.225,y0,zm,cw);
+ for(let i=1;i<n;i++)box(g,.012,1.0,.012,-2.044,y0,za+(zb-za)*i/n,seam);
+ box(g,.014,.014,zb-za,-2.044,y0+.5,zm,seam); // chỉ còn 1 đường ngang chia 2 dãy
+ box(g,.3,.015,zb-za-.05,-2.225,y0-.015,zm,lamp);
+
+  // ô kệ gỗ: khoang bàn thờ ông Táo (y0 → y0+1.0) + hộp kín trên cùng, rộng .9 m (z -6.75 → -5.85)
+ {const T=1.0,dz=.82,zc=-6.75+dz/2,rd=M(0xc0392b),og=M(0xe08a3a),gn=M(0x7aa83a),yl=M(0xe8c53a),pic=M(0xf1d27a),bl=M(0x4a6fa5),gd=M(0xc9a24a);
+ const sph=(r,x,y,z,m)=>{const s=new THREE.Mesh(new THREE.SphereGeometry(r,12,10),m);s.position.set(x,y,z);s.castShadow=true;g.add(s)};
+ const cyl=(rt,rb,h,x,y,z,m)=>{const c=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,16),m);c.position.set(x,y+h/2,z);c.castShadow=true;g.add(c)};
+ box(g,.02,T,dz,-2.39,y0,zc,dw);                                              // vách lưng
+ box(g,.35,T,.04,-2.225,y0,zc-dz/2+.02,wd);box(g,.35,T,.04,-2.225,y0,zc+dz/2-.02,wd); // 2 hông
+ box(g,.35,.04,dz,-2.225,y0,zc,wd);                                           // đáy
+ box(g,.35,.04,dz,-2.225,y0+.96,zc,wd);                                       // nắp trên
+ box(g,.3,.012,dz-.1,-2.225,y0+.948,zc,lamp);                                 // đèn LED dưới nắp
+ // diềm gỗ lượn sóng dưới hộp kín
+ box(g,.03,.07,dz-.08,-2.065,y0+.93,zc,wd);
+ for(let i=0;i<7;i++)sph(.06,-2.065,y0+.93,zc-dz/2+.1+i*(dz-.2)/6,wd);
+ // ảnh thờ ông Táo: khung đỏ dựa vách, ở giữa-trái
+ box(g,.02,.42,.3,-2.365,y0+.04,zc-.15,rd);box(g,.012,.35,.23,-2.352,y0+.075,zc-.15,pic);
+ // bát hương trước ảnh
+ cyl(.05,.04,.06,-2.25,y0+.04,zc-.15,gd);
+ // đĩa trái cây (phải): đĩa + táo, cam, ổi
+ cyl(.12,.1,.02,-2.2,y0+.04,zc+.17,M(0xf8f4ea));
+ sph(.04,-2.2,y0+.11,zc+.17,rd);sph(.04,-2.15,y0+.11,zc+.22,og);sph(.04,-2.24,y0+.11,zc+.22,gn);sph(.035,-2.2,y0+.15,zc+.2,og);
+ // chén nước cạnh đĩa
+ cyl(.04,.03,.05,-2.12,y0+.04,zc+.02,M(0xe4d8c0));
+ // bình hoa cúc vàng bên phải
+ cyl(.03,.025,.12,-2.3,y0+.04,zc+.3,bl);
+ sph(.05,-2.3,y0+.2,zc+.3,yl);sph(.035,-2.28,y0+.26,zc+.27,yl);sph(.035,-2.32,y0+.25,zc+.33,yl)}
+
+ // tủ trắng cạnh cửa sổ (nối với dãy tủ thành chữ L)
+  box(g,.4,hh,.35,-1.85,y0,-8.725,cw);box(g,.012,hh,.012,-1.85,y0,-8.544,seam);box(g,.4,.014,.014,-1.85,y0+.5,-8.544,seam);
+}
 function plan1(g){const h=H-.2;
  // sảnh -0.100: nền + 2 bậc 800 hai bên (giữa mở 3000) tại z=6.6
  box(g,4.6,.02,2.3,0,0,7.75,M(0xbfb09a),false);
@@ -213,10 +346,12 @@ function plan1(g){const h=H-.2;
  planter(g,-1.95,6.7,.9);planter(g,1.95,6.7,.9);
  // vách lam gỗ che cầu thang (trục 3, chừa hành lang 1450 bên phải) + TV và tủ thấp hướng ra phòng khách
  // lam gỗ sát mép trước vế thang đi lên (z≈1.46), cao như cũ: đỉnh chạy dốc theo mặt dưới vế thang mặt tiền (gần chạm trần bên trái, thấp dần sang phải)
- for(let i=0;i<19;i++){const x=-.5+i*.15,top=Math.min(h-.05,H-(x+.45)*.668-.18,x>2?1.75:9);box(g,.09,top-.05,.06,x,.05,1.46,wood)}
- // TV treo giữa vách lam (như bản trước) + tủ thấp mặt gỗ phía trước
- box(g,1.3,.75,.05,.9,1.1,1.52,iron);
- box(g,2.8,.26,.4,1,.1,1.72,white);box(g,2.84,.04,.44,1,.36,1.72,wood);box(g,2.7,.1,.34,1,0,1.72,wood);
+ // (đã bỏ vách lam gỗ dưới cầu thang)
+ // TV treo bên trái vách lam + tủ thấp bên dưới; phần còn lại là tủ gầm cầu thang
+ // TV treo tường trái phòng khách (sau 2 ghế, quay mặt về sofa) + tủ thấp bên dưới
+ box(g,.05,.75,1.3,-2.37,1.1,4.4,iron);
+ box(g,.4,.26,1.8,-2.2,.1,4.4,white);box(g,.44,.04,1.84,-2.2,.36,4.4,wood);box(g,.34,.1,1.7,-2.2,0,4.4,wood);
+ stairCab(g);
  // phòng ngủ 1 (trục 4→5): cửa D4 trên vách hành lang 1200
  box(g,3.6,h,.12,.6,0,.4,wallM);box(g,3.6,h,.12,.6,0,-3.2,wallM);
  box(g,.12,h,2.4,-1.2,0,-.8,wallM);box(g,.12,h,.3,-1.2,0,-3.05,wallM);box(g,.12,h-2.1,.9,-1.2,2.1,-2.45,wallM);box(g,.85,2.05,.04,-.775,0,-2.9,wood);
@@ -228,6 +363,7 @@ function plan1(g){const h=H-.2;
  for(let i=0;i<7;i++)box(g,.09,1.2,.06,-2.3+i*.15,.05,-5.96,wood);
  // cửa sau D3 + cửa sổ B-2
  bw(g,.99,2.2,1.6,0,-9.12,-1,1);bw(g,1.67,1.4,-.66,.9,-9.12,-1);bw(g,.99,2.2,1.6,0,-8.88,1,1);bw(g,1.67,1.4,-.66,.9,-8.88,1);box(g,1.2,.15,.5,1.6,0,-9.5,stone);
+ kitchenUpper(g);
 }
 function plan2(g){const h=H-.2;
  box(g,3.6,h,.12,.7,0,5.5,wallM);box(g,.12,h,1.81,-1.1,0,4.595,wallM);box(g,.12,h,.2,-1.1,0,2.6,wallM);
@@ -415,7 +551,7 @@ function wallGap(f,z,gaps){const y0=.6+f*H,r=[];let a=-2.6;
  const FG=[[[-1.4,1.4]],[[-.23,1.43]],[[-.04,1.36]]],BG=[[[1.1,2.1]],[[-1.1,-.1]],[[-1.1,-.1]]];
  for(let f=0;f<3;f++)colls.push(...wallGap(f,9,FG[f]),...wallGap(f,-9,BG[f]))})();
 [-1.95,1.95].forEach(x=>colls.push(new THREE.Box3(new THREE.Vector3(x-.45,.6,6.45),new THREE.Vector3(x+.45,1.5,6.95)))); // bồn cây sảnh
-colls.push(new THREE.Box3(new THREE.Vector3(-.55,.6,1.44),new THREE.Vector3(2.4,2.6,1.95))); // vách lam gỗ + tủ TV
+colls.push(new THREE.Box3(new THREE.Vector3(.5,.6,.5),new THREE.Vector3(2.4,2.2,1.42)));
 colls.push(new THREE.Box3(new THREE.Vector3(-1.05,.6+3*H,-9),new THREE.Vector3(.45,.6+3*H+1.4,-7.5)),new THREE.Box3(new THREE.Vector3(.45,.6+3*H,-8.75),new THREE.Vector3(1.55,.6+3*H+1.2,-7.25)));
 function hit(x,z,fy){const r=.25,y0=fy+.35,y1=fy+1.7;
  for(const b of colls){if(b.max.y<y0||b.min.y>y1)continue;
@@ -500,11 +636,12 @@ function walkUpdate(dt){
 const wb=document.getElementById('wb'),wkh=document.getElementById('wkh'),jy=document.getElementById('joy'),kn=jy.firstElementChild;
 function setWalk(on){
  wk.on=on;document.querySelector('.panel').style.display=on?'none':'';
- jy.style.display=on&&(matchMedia('(pointer:coarse)').matches||matchMedia('(hover:none)').matches||navigator.maxTouchPoints>0||'ontouchstart' in window)?'block':'none';wkh.style.display=on?'block':'none';wb.blur();window.focus();wb.textContent=on?'✖ Thoát':'🚶 Đi bộ';chr.visible=on;setLevel(0);
+  const touch=matchMedia('(pointer:coarse)').matches||matchMedia('(hover:none)').matches||navigator.maxTouchPoints>0||'ontouchstart' in window;
+ jy.style.display=on&&touch?'block':'none';wkh.style.display=on&&!touch?'block':'none';wb.blur();window.focus();wb.textContent=on?'✖ Thoát':'🚶 Đi bộ';chr.visible=on;setLevel(0);
  if(on){Object.assign(wk,{x:0,z:13,fy:0,yaw:Math.PI,amp:0,t:0,lvl:-1,ride:null,cd:0});th=0;ph=1.25;dist=5;minD=2.5;tgt.set(0,1.2,13);roof.visible=gf.visible=false}
  else{minD=8;th=.6;ph=1.2;dist=44;tgt.set(0,5,0);for(const k in keys)keys[k]=false;joy.x=joy.y=0}}
 wb.onclick=()=>setWalk(!wk.on);
-addEventListener('touchstart',()=>{if(wk.on)jy.style.display='block'},{passive:true}); // chắc chắn hiện joystick khi chạm màn hình
+addEventListener('touchstart',()=>{if(wk.on){jy.style.display='block';wkh.style.display='none'}},{passive:true}); // chắc chắn hiện joystick khi chạm màn hình
 const kc=e=>e.code||({w:'KeyW',a:'KeyA',s:'KeyS',d:'KeyD'})[(e.key||'').toLowerCase()];
 addEventListener('keydown',e=>{const c=kc(e);if(!c)return;keys[c]=true;if(wk.on&&c=='KeyE'&&!e.repeat)(ov.classList.contains('show')?ov.classList.remove('show'):pic.click());if(wk.on&&(c.startsWith('Arrow')||c=='Space'))e.preventDefault()});
 addEventListener('keyup',e=>{const c=kc(e);if(c)keys[c]=false});
